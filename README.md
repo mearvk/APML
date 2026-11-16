@@ -17,6 +17,8 @@ source/main/webapp/
   assets/css js images fonts rss social
   agencies/<name>/{html,css,js}    one folder per Software Agency
 docs/DOCTRINE.md                   doctrinal theme (provisional)
+docs/ENGINEERING-PRINCIPLES.md     long-form six-strand discipline (draft)
+analysis/APML-ANALYSIS.md          page-by-page analysis of the six technologies
 ```
 
 ## Build and run
