@@ -39,14 +39,16 @@ Folder: `compiler/`
 
 ### Premium SLeeLa Virtual Machines (SLVM 1 to 11)
 
+Folder: `vm/`
+
 These are the eleven premium VM generations from `sleela-virtual-machine/001` to `011`, the set the repository's `make premium-vms` target builds. Each `slvm-NN` is a standalone executable that links the native Core engine (`libslcore.a`) and runs a compiled `.sleela` artifact. Each generation builds on the one before. They are about 670 KB each.
 
 **Run a program:**
 
 ```sh
 sleelvac compile -o hello.art hello.sleela     # make an artifact
-./slvm-04 hello.art                             # run it on the Supervisor VM
-./slvm-04 --selfcheck                           # run the VM's own self-check
+./vm/slvm-04 hello.art                          # run it on the Supervisor VM
+./vm/slvm-04 --selfcheck                        # run the VM's own self-check
 ```
 
 `sleelvac` needs `SLEELA_HOME` set to a SLeeLa checkout when run outside the repository, and the integrity-manifest note under "Provenance and caveats" applies to it. The `slvm-NN` binaries themselves take an artifact path. They print `not a compiled .sleela artifact` for anything else, including `--help`. The repository's `sleela vm run premium <n> <program>` command is different: it rebuilds the VM from source in a checkout and does not use these files.
