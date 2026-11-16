@@ -4,9 +4,9 @@ Status: partial. Based on text supplied by the site owner: the APML and Bloq
 material, the Bodi "Technological Overview", and three headed sections
 ("Design Goals", "ROI Considerations", "Progress Inventory"), the Sprung
 page (page 4), the Runyn page (page 5) and the Falthruu page (page 6),
-in the owner's numbering. All six pages have now been supplied. Nothing
-here is inferred from pages not supplied. Sprung has no description of
-its own on any page.
+in the owner's numbering. All six pages have been supplied. The owner
+has since supplied a description of Sprung in chat (section 3.4); it is
+not yet on the site.
 
 Two things below are my interpretation, not the owner's statements:
 the cordial assigned to each page, and the reading of the pages as a bridge.
@@ -50,7 +50,7 @@ operation:
 | 1 | APML | Cognitive | The language. A formal, shared description of what a system is. |
 | 2 | Bloq | Cognitive to producial | The tool. Reads APML and emits Java source. |
 | 3 | Bodi | Producial | The runtime. Gives every part of a running system an address and lets it be patched. |
-| 4 | Sprung | PENDING | Page text is the Falthruu paragraph (see 3.4). Sprung is described only on the Bodi page, as a scripting language for URL mappings. |
+| 4 | Sprung | Producial, messaging | Time-named messaging envoy and scripting language with ingress and egress for Java and SLeeLa. Page text on the site is still the Falthruu paragraph (see 3.4). |
 | 5 | Runyn | Producial, review stage | Folds a sprawling code base back into clean APML and Java source for architectural review. Closes the loop to APML. |
 | 6 | Falthruu | Producial, over time | Propagates a late design change across the system and prior commits. |
 
@@ -112,20 +112,26 @@ Assessment:
 - Network latency and availability become part of every call that crosses a URL. The page should say which calls are local and which are remote.
 - The `/hello` ending looks like a sample URL, which is a good instinct. A fuller example would help.
 
-### 3.4 Sprung page (page 4)
+### 3.4 Sprung (page 4)
 
-Cordial (my inference): not determinable from the page.
+Cordial (my inference): Messaging and Time as Design.
 
-The page is titled Sprung technology, but its opening paragraph is the
-Falthruu paragraph, word for word the same as page 6 (see 3.7). It never
-describes Sprung. The only description of Sprung is on the Bodi page: a
-scripting language for representing mappings of external URLs into Bodi
-contexts.
+The site page for Sprung currently carries the Falthruu paragraph (word for
+word the same as page 6, see 3.7), so it has no Sprung content. The Bodi
+page calls Sprung a scripting language for mapping external URLs into Bodi
+contexts. The owner has now described Sprung in chat. Paraphrased:
+
+- Sprung is an envoy to messaging. It classifies messaging as "voltage on time", and each message carries its own name as time.
+- It is also essence to the collateral of the system: the messages are what the rest of the system relies on.
+- Sprung equals dimensional progress as industry to a particular time. As time cycles, patterns of activity emerge, and the "Sprung Attention Creation Principle" can then rest as a facilitator of economy and mode.
+- Sprung is to be a special, live-branded scripting language that allows both ingress and egress of Java and/or SLeeLa, as a sub-mechanism of the framework itself.
 
 Assessment:
-- This looks like a page duplicated from the Falthruu page whose opening paragraph was not yet replaced. The Sprung page therefore has no content of its own.
-- Sprung needs its own paragraph. From the Bodi page alone, a reasonable starting point is: what it scripts, how a script is attached to a Bodi URL, and a short example.
-- Below the opening paragraph the page repeats the Bodi text, as described in section 0.
+- The concrete, buildable core is the last point: a scripting language whose scripts can call into Java and SLeeLa and be called from them. This agrees with the Bodi page, where Sprung scripts express URL mappings.
+- The second concrete idea is time-named messages: every message identified by its time. That implies an ordering and replay model. It also makes the pattern-over-cycles idea testable, since recurring patterns can be found by comparing messages across time windows.
+- "Voltage on time", "Attention Creation Principle", and "economic and mode" are not yet defined well enough for a reader or an implementer. Each needs a one-sentence definition and an example. For instance: what is classified, what are the classes, and what does a classified message cause the system to do?
+- Open design questions for the page: the message format; how a script is bound to a Bodi URL; whether time names are wall-clock, logical or both; and how Java and SLeeLa calls cross the boundary (types, errors, security).
+- Placement in the chain: Sprung is the messaging layer under Bodi's addressable parts, and Falthruu and Runyn can use the time-named message log as their evidence of what changed and when.
 
 ### 3.5 Runyn
 
@@ -194,7 +200,7 @@ description should drive design, build and operation.
 1. Show a small APML sample and the Bloq output next to it.
 2. State what "correct" means for Bloq output, and how regeneration treats hand edits.
 3. Document Bodi's trust model for URL remapping.
-4. Write the Sprung page (page 4), which currently carries the Falthruu paragraph.
+4. Publish the Sprung description on page 4, with definitions for the terms in 3.4. The page currently carries the Falthruu paragraph.
 4a. Replace the duplicated Bodi text under Design Goals, ROI Considerations and Progress Inventory with content specific to each heading.
 5. Fix small text issues: "software herself", "very usually", "notion of excellent software in Day" (unclear, possibly a typo), "its its".
 6. Pick the one agency name for each product (APML, Bloq, Bodi, Sprung, Runyn, Falthruu) and use it consistently in folder names under `agencies/`.
@@ -209,7 +215,7 @@ slugs map as follows:
 | 1 | `copy-of-bodi-technology` | APML |
 | 2 | `bloq-technology` | Bloq |
 | 3 | `bodi-technology` | Bodi |
-| 4 | `sprung-technology` | Falthruu text (Sprung not described) |
+| 4 | `sprung-technology` | Falthruu text (Sprung description now supplied in chat) |
 | 5 | `copy-of-bodi-technology-1` | Runyn |
 | 6 | `copy-of-runyn-technology` | Falthruu |
 
@@ -226,4 +232,4 @@ This analysis supports a refinement of `docs/DOCTRINE.md`: the doctrine
 should be "structure first, one description from design through
 operation", with each technology owning one stage. The agencies table in
 that file can now be started with APML, Bloq, Bodi, Runyn and Falthruu.
-Sprung stays TBD until it has its own page text.
+Sprung can be added from section 3.4.
