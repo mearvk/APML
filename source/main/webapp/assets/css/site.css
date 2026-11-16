@@ -1,0 +1,32 @@
+/* PLACEHOLDER theme. Replace the custom properties with the Wix site palette. */
+:root {
+  --bg: #0b1020; --surface: #141b33; --text: #e8ecf8; --muted: #9aa6c8;
+  --accent: #4f8cff; --accent-ink: #fff; --radius: 8px; --max: 64rem;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 1rem/1.6 var(--font-body); }
+a { color: var(--accent); }
+.skip-link { position: absolute; left: -999px; }
+.skip-link:focus { left: 1rem; top: 1rem; background: var(--surface); padding: .5rem 1rem; }
+.site-header { display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 1.5rem; background: var(--surface); position: sticky; top: 0; z-index: 10; }
+.brand { font-weight: 700; font-size: 1.25rem; color: var(--text); text-decoration: none; }
+.site-nav a { margin-left: 1.25rem; color: var(--muted); text-decoration: none; padding-bottom: 2px;
+  border-bottom: 2px solid transparent; transition: color .2s, border-color .2s; }
+.site-nav a:hover, .site-nav a.active { color: var(--text); border-color: var(--accent); }
+.nav-toggle { display: none; }
+main { max-width: var(--max); margin: 0 auto; padding: 2rem 1.5rem; }
+.lead { font-size: 1.35rem; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1rem; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 1.25rem; }
+.reveal { opacity: 0; transform: translateY(12px); transition: opacity .5s, transform .5s; }
+.reveal.visible { opacity: 1; transform: none; }
+.site-footer { text-align: center; color: var(--muted); padding: 2rem 1rem; }
+.social { list-style: none; display: flex; gap: 1rem; justify-content: center; padding: 0; }
+@media (max-width: 40rem) {
+  .nav-toggle { display: block; }
+  .site-nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); padding: 1rem; }
+  .site-nav.open { display: flex; flex-direction: column; }
+  .site-nav a { margin: .5rem 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

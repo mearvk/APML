@@ -1,0 +1,8 @@
+</main>
+<footer class="site-footer">
+  <p><c:out value="${site['site.tagline']}"/></p>
+  <ul class="social" id="social-links" data-src="${pageContext.request.contextPath}/assets/social/links.json"></ul>
+  <p><a href="${pageContext.request.contextPath}/rss.xml">RSS</a></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+.btn { display: inline-block; padding: .6rem 1.2rem; border-radius: var(--radius); font-weight: 600;
+  text-decoration: none; border: 2px solid var(--accent); position: relative; overflow: hidden;
+  transition: transform .15s, background .2s, color .2s; cursor: pointer; }
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-ghost { background: transparent; color: var(--accent); }
+.btn-ghost:hover { background: var(--accent); color: var(--accent-ink); }
+.btn .ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.35);
+  transform: scale(0); animation: ripple .6s linear; pointer-events: none; }
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
