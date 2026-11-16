@@ -1,12 +1,14 @@
 # sleela-3.2-binaries
 
-Compiled Linux x86-64 executables (ELF, glibc, dynamically linked) built from https://github.com/mearvk/SLeeLa, branch master. Executables only: no source folders, libraries or fixtures. Checksums are in `SHA256SUMS`.
+Compiled Linux x86-64 executables (ELF, glibc, dynamically linked) built from https://github.com/mearvk/SLeeLa, branch master. Executables only: no source folders, libraries or fixtures. Binaries are sorted into one subfolder per group (see `GROUPINGS.md`). Checksums are in `SHA256SUMS`, with paths relative to this folder (`sha256sum -c SHA256SUMS`). Further documents: `SENIOR-VIEW.md`, `ASSERTION-SERIES.md`, `binaries-index.tsv`.
 
 ## Binaries
 
 Every file in this folder is listed below, grouped by purpose. Descriptions come from each module's own README and from the program's own usage text. "Not run here" means it was not started (to avoid opening ports); "not verified" means the program printed no usage. Test programs are included.
 
 ### Core toolchain
+
+Folder: `toolchain/`
 
 The three main tools, built from `impl/`.
 
@@ -17,6 +19,8 @@ The three main tools, built from `impl/`.
 | `nordshrift` | Nordshrift 2.7.1-dev. Transpiler driver for `.sst` sources (spec NS-SST-0001 2.2): `check`, `build`, `objects`, `relevance`, `version`. |
 
 ### Compilers, decompiler and converters
+
+Folder: `compiler/`
 
 | Binary | Description |
 |--------|-------------|
@@ -34,6 +38,8 @@ The three main tools, built from `impl/`.
 | `slecompiler-api-slir-vm` | Runs a built-in SLIR VM sample and prints the result (`result: 42`, `steps: 4`). |
 
 ### SLeeLa Virtual Machines (SLVM 1 to 11)
+
+Folder: `vm/`
 
 Each `slvm-NN` runs a compiled `.sleela` artifact (give it an artifact path; without one it reports that it is not a compiled artifact). Each generation builds on the one before, as described in its module README.
 
@@ -53,6 +59,8 @@ Each `slvm-NN` runs a compiled `.sleela` artifact (give it an artifact path; wit
 
 ### Anti-virus (Sleelvarin)
 
+Folder: `antivirus/`
+
 The module's own name is Sleelavirin.
 
 | Binary | Description |
@@ -64,6 +72,8 @@ The module's own name is Sleelavirin.
 | `test_cpp_scan` | Test for the C++ scan wrapper. |
 
 ### Runtime services, registry, configuration, debugging
+
+Folder: `runtime/`
 
 | Binary | Description |
 |--------|-------------|
@@ -92,6 +102,8 @@ The module's own name is Sleelavirin.
 
 ### Native bridges and the Idea System
 
+Folder: `native-bridges/`
+
 | Binary | Description |
 |--------|-------------|
 | `sleela-opcode-native` | Opcode bridge self-test (103 opcodes, fetch and dispatch). |
@@ -106,6 +118,8 @@ The module's own name is Sleelavirin.
 | `sln-demo` | Demo of the Idea System native layer (`idea/sleela-native`). |
 
 ### Servers and networking
+
+Folder: `network/`
 
 Several of these listen on network ports. Start them deliberately and read their `--help` first.
 
@@ -137,6 +151,8 @@ Several of these listen on network ports. Start them deliberately and read their
 
 ### Data transport, ledger, SQL and the advantage module
 
+Folder: `data/`
+
 | Binary | Description |
 |--------|-------------|
 | `transport` | Secure, idempotent acquisition: `transport review <url>`, `fetch <url> [--store DIR] [--sha256 HEX]`, `keystore`, `kex <x25519|p256|ffdhe2048|ffdhe3072>`. |
@@ -149,6 +165,8 @@ Several of these listen on network ports. Start them deliberately and read their
 | `trading_demo` | Prints strategic trade-offs across venue types (crypto, and others). |
 
 ### Telecom, signal processing and recognition
+
+Folder: `signal-recognition/`
 
 | Binary | Description |
 |--------|-------------|
@@ -166,6 +184,8 @@ Several of these listen on network ports. Start them deliberately and read their
 
 ### Regex
 
+Folder: `regex/`
+
 Regular-expression engines and tests from `regex/`. They printed nothing for `--help`; their usage was not verified.
 
 | Binary | Description |
@@ -178,6 +198,8 @@ Regular-expression engines and tests from `regex/`. They printed nothing for `--
 | `natural-cpp` | Natural-language regex test, C++. |
 
 ### Philosophy module examples and tests
+
+Folder: `philosophy/`
 
 Reference implementation of the conversation mask and integer reduction (non-clinical). All data is synthetic.
 
@@ -204,6 +226,8 @@ Reference implementation of the conversation mask and integer reduction (non-cli
 | `heritage-print-test-cpp` | Common Rails printing test, C++. |
 
 ### Terminal, editors, GUI and 3D
+
+Folder: `terminal-gui/`
 
 | Binary | Description |
 |--------|-------------|
