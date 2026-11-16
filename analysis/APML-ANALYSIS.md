@@ -125,10 +125,14 @@ contexts. The owner has now described Sprung in chat. Paraphrased:
 - It is also essence to the collateral of the system: the messages are what the rest of the system relies on.
 - Sprung equals dimensional progress as industry to a particular time. As time cycles, patterns of activity emerge, and the "Sprung Attention Creation Principle" can then rest as a facilitator of economy and mode.
 - Sprung is to be a special, live-branded scripting language that allows both ingress and egress of Java and/or SLeeLa, as a sub-mechanism of the framework itself.
+- Sprung can call Create, Alter or Destroy on time as a mechanism, and on the symptom of a function. The owner describes this as analogous to a creator, "like a tax on David", and calls the whole thing a creative time-force equation.
 
 Assessment:
 - The concrete, buildable core is the last point: a scripting language whose scripts can call into Java and SLeeLa and be called from them. This agrees with the Bodi page, where Sprung scripts express URL mappings.
 - The second concrete idea is time-named messages: every message identified by its time. That implies an ordering and replay model. It also makes the pattern-over-cycles idea testable, since recurring patterns can be found by comparing messages across time windows.
+- Create, Alter and Destroy are three clear verbs, the same lifecycle that databases use (create, alter, drop). They are the most concrete statement of what a Sprung script does. The page should say what each verb acts on (a message, a time window, a function, a Bodi URL) and what Destroy guarantees, since it is irreversible unless messages are kept in a log.
+- Acting on "the symptom of a function" suggests Sprung reacts to observed behavior of a function, such as a failure or a delay, and then creates, alters or removes something in response. That would pair naturally with Falthruu. The owner should confirm.
+- The "tax on David" analogy and the "creative time-force equation" are not explained, and I do not know what they refer to. If there is an equation, it should be written out, with its terms defined. Until then I have left both unreinterpreted.
 - "Voltage on time", "Attention Creation Principle", and "economic and mode" are not yet defined well enough for a reader or an implementer. Each needs a one-sentence definition and an example. For instance: what is classified, what are the classes, and what does a classified message cause the system to do?
 - Open design questions for the page: the message format; how a script is bound to a Bodi URL; whether time names are wall-clock, logical or both; and how Java and SLeeLa calls cross the boundary (types, errors, security).
 - Placement in the chain: Sprung is the messaging layer under Bodi's addressable parts, and Falthruu and Runyn can use the time-named message log as their evidence of what changed and when.
