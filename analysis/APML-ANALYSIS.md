@@ -1,0 +1,165 @@
+# APML Site Analysis
+
+Status: partial. Based on text supplied by the site owner: the APML and Bloq
+material, the Bodi "Technological Overview", and three headed sections
+("Design Goals", "ROI Considerations", "Progress Inventory"). The Sprung
+page and the Runyn page have not been supplied and are marked PENDING.
+Nothing here is inferred from those pages.
+
+Two things below are my interpretation, not the owner's statements:
+the cordial assigned to each page, and the reading of the pages as a bridge.
+Both are flagged so the owner can correct them.
+
+## 0. Key finding: three headed sections hold identical text
+
+On the Bodi page (page 3), the overview (three paragraphs, ending "This is
+Bodi. /hello") appears four times in a row: once as the page body and once
+under each of the headings "Design Goals", "ROI Considerations" and
+"Progress Inventory". The text is identical each time. Only the headings
+differ. Pages 5 and 6 (the copies) were also sent with this same headed
+structure, so the headings are probably a template shared across the
+technology pages.
+
+Consequences:
+- The headings read as the quality "cordials" the owner described: Design Goals (design intent), ROI Considerations (economic value) and Progress Inventory (state of the work). This is an inference from the headings alone.
+- None of the three sections currently says anything specific to its heading. The body text is Bodi's general description, apparently reused as filler. The page ties no goals to design, no costs or returns to ROI, and no completed or open items to progress.
+- This likely explains the duplicate pages (`copy-of-bodi-technology`, `copy-of-bodi-technology-1`): they were made by copying the Bodi page and changing the heading.
+
+## 1. The overarching idea
+
+APML says software should start from structure. The conventional route is a
+requirements document, a rushed design, and a patched-together build before
+the deadline. APML reverses that. The structure is written first, in a
+subset of XML called Application Markup Language, and source code is
+generated from it.
+
+The brand's through-line is the consuming need of software development:
+getting from an idea to working, correct, connected software without losing
+the design on the way. Each technology on the site covers one stretch of
+that path.
+
+## 2. Reading order as a bridge (interpretation)
+
+Left to right, the pages move from understanding to production to
+operation:
+
+| Order | Technology | Stage | Role in the bridge |
+|-------|------------|-------|--------------------|
+| 1 | APML | Cognitive | The language. A formal, shared description of what a system is. |
+| 2 | Bloq | Cognitive to producial | The tool. Reads APML and emits Java source. |
+| 3 | Bodi | Producial | The runtime. Gives every part of a running system an address and lets it be patched. |
+| 4 | Sprung | PENDING | Named on the Bodi page as a scripting language. Role not yet confirmed. |
+| 5 | Runyn | PENDING | Page not supplied. |
+
+On "College and Books": APML reads as the book (the written, formal
+description), and Bloq and Bodi as the college (the practice that turns that
+description into working systems). This is my reading and the owner may
+frame it differently.
+
+## 3. Page analysis
+
+### 3.1 APML
+
+Cordial (my inference): Structure as Design.
+
+Claims, in the owner's text:
+- Software is usually written quickly against a requirements document, with only a rough sense of structure.
+- APML is a subset of XML and inherits its benefits.
+- Software systems can be compiled, extended, interacted with and published "in minutes".
+- Structure guides function and compiles into source code.
+
+Assessment:
+- The strongest idea is that the design document and the program share one source of truth. This removes the usual drift between the two.
+- Being a subset of XML is a practical choice. Parsers, validators, schemas, diff tools and editors already exist.
+- The "in minutes" claim is untested on the page. A short worked example (a small APML file and the Java it produces) would support it better than any description.
+- The page does not say what APML looks like. A reader cannot yet judge the language.
+
+### 3.2 Bloq
+
+Cordial (my inference): Correct Process as Design.
+
+Claims:
+- Bloq is the implementation layer above hand-written production source.
+- It interprets APML and produces correct, forward-looking Java source for further work.
+- It gives tight control of structure from design documents, so developers need not set up program structure by hand.
+- Scope runs from Java Swing to large systems.
+- Architects and developers share one technology, so managers, architects and coders can discuss the same document.
+- Pipeline: APML, then Bloq, then Java source.
+
+Assessment:
+- The audience argument is the best part. A single XML artifact that managers can read and developers can build from is a real collaboration benefit.
+- "Correct" and "formal" are strong words. The page should say what is guaranteed: for example, that generated code compiles, that it matches the APML structure, or that it is regenerated without losing hand edits. The last point is the usual weak spot of generators and deserves an explicit answer.
+- Generated source that is "for further development" raises the round-trip question: what happens to hand edits when APML changes?
+- The closing questions ("What is a system? What makes a great system?") state the real motivation well. They are the best candidate for the homepage lead.
+
+### 3.3 Bodi
+
+Cordial (my inference): Extensibility as Design.
+
+Claims:
+- Bodi Remote Server Technology changes how projects, applications and design are handled locally and remotely.
+- Each server, system, object, listener and function has its own URL, reachable over TCP/IP.
+- Bodi-compliant software can be patched, network-exposed and hooked through simple XML documents.
+- External URLs can map to internal contexts and be expressed in the Sprung scripting language.
+- Example: a remote server has a four-function protocol stack. Years later, a security patch is applied by telling Bodi that a function's new URL is on a patch server. The same applies to the server, system object and protocol stack.
+
+Assessment:
+- The core idea, addressable everything with late binding, is a clear answer to software that cannot be extended because its internals are closed.
+- The patch-by-redirect example is attractive for operations. It is also the main risk. If a function URL can be repointed to a patch server, whoever controls that mapping controls the running code. The page should describe how mappings are authenticated, signed and audited. Without that, a reader with security experience will treat it as a supply-chain weakness.
+- Network latency and availability become part of every call that crosses a URL. The page should say which calls are local and which are remote.
+- The `/hello` ending looks like a sample URL, which is a good instinct. A fuller example would help.
+
+### 3.4 Sprung
+
+PENDING. Only known from the Bodi page: a scripting language used to represent complicated mappings of external URLs into Bodi contexts.
+
+### 3.5 Runyn
+
+PENDING. No content supplied.
+
+### 3.6 Bodi copies: Design Goals, ROI Considerations, Progress Inventory
+
+Text supplied. Each section repeats the Bodi overview in 3.3 exactly (see
+section 0). Assessment per heading, against what each should contain:
+
+| Heading | What a reader expects | What the page gives | Suggested content |
+|---------|----------------------|---------------------|-------------------|
+| Design Goals | The aims that shaped Bodi | General description only | Addressability of every part, late binding, patching without redeploy, interoperability across JVMs |
+| ROI Considerations | Cost, saving, payback | Nothing on cost or return | Fewer redeploys for patches, reuse across JVMs without decompiling, less custom glue code. Needs figures or a worked case |
+| Progress Inventory | What exists and what is open | Nothing on status | A list of finished, in-progress and planned parts of Bodi, Bloq and Sprung |
+
+The three should be rewritten so each has its own content. As they stand,
+a visitor who clicks through all three reads the same text three times.
+
+## 4. Cross-page themes
+
+| Theme | APML | Bloq | Bodi |
+|-------|------|------|------|
+| XML as the common medium | Yes | Yes | Yes (patching) |
+| Structure first, code second | Yes | Yes | Partly |
+| Shared language across roles | Implied | Yes | Not stated |
+| Future-proofing and extension | Implied | Yes (further development) | Yes (core claim) |
+| Speed ("minutes", "lightning quick") | Yes | Yes | No |
+| Concrete example shown | No | No | Partly |
+
+The repeated overlap is intentional: each page restates that XML-described
+structure is the thread. The brand's consistent message is that one formal
+description should drive design, build and operation.
+
+## 5. Gaps worth closing before the site is final
+
+1. Show a small APML sample and the Bloq output next to it.
+2. State what "correct" means for Bloq output, and how regeneration treats hand edits.
+3. Document Bodi's trust model for URL remapping.
+4. Supply or confirm Sprung and Runyn.
+4a. Replace the duplicated Bodi text under Design Goals, ROI Considerations and Progress Inventory with content specific to each heading.
+5. Fix small text issues: "software herself", "very usually", "notion of excellent software in Day" (unclear, possibly a typo), "its its".
+6. Pick the one agency name for each product (APML, Bloq, Bodi, Sprung, Runyn) and use it consistently in folder names under `agencies/`.
+
+## 6. Link to the doctrine
+
+This analysis supports a refinement of `docs/DOCTRINE.md`: the doctrine
+should be "structure first, one description from design through
+operation", with each technology owning one stage. The agencies table in
+that file can now be started with APML, Bloq and Bodi. Sprung and Runyn
+stay as TBD.
