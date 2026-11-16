@@ -63,3 +63,12 @@ A second pass ran each remaining Makefile's default target (118 directories, ski
 Notable additions: `sleelac` (`compiler/`), `sleela-decompiler` and the `slecompiler-api-*` tools (`decompiler/`), `javaconv` (`sleelactl/`, the Java converter), `slvm-01` and `slvm-02` (`sleela-virtual-machine/`), `sleela-sql`, `sleela-resolver`, `ledger_tool`, `analyze` and `trading_demo` (`advantage/`), `bodi-xml-runner` (`api-sleela-2.1-bodi/`), and the `philosophy`, `bash` (model-3D, readline) and `signal-processing` examples.
 
 Several modules built without producing a binary, and some failed (for example `connector`, most `lib/connector/*`, `lib/gui`, `sommeliers`, `website-generator`, `autocad`). Their logs were not reviewed in this pass.
+
+## CMake projects
+Built out of tree with cmake (Release): `os-level-support` (loader, runtime, trust), `lib/os-level-support`, `lib/native/loader` and `utf-4088`. The tool `utf4088-inspect` is in `utf-4088/`; the test programs and loader fixtures are under `selftests/`. `lib/native/loader` produced no executable.
+
+## Why other modules did not produce binaries
+- Missing system development packages: `lib/connector/*` (mysql, curl, odbc and others), `connector` (download blocked), `http-servers/2` (nghttp2), `http-3.0/kernel` (Linux kernel headers), `ballum` and the GTK4 terminal.
+- Defects in the repo sources: `http-1.0` (duplicate function definition), `sommeliers` (stray backslash in `feedback.c`), `server-edition/http` (a source file it needs, `api/http-multiplexing/sleela_http_api.c`, is missing), `sleela-virtual-machine/008/build/linux` (include path to `sleela_core.h`).
+- SLeeLa programs rather than native builds: `autocad` and `website-generator` fail `sleelvac` checks (unknown types `Model` and `Design`), and `lib/gui` and the `lib/*/example/science` targets run SLeeLa checks.
+These can be revisited when the headers are installed or the sources are fixed.
