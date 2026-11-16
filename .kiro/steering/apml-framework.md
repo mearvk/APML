@@ -17,3 +17,8 @@ Conventions:
 - Use these exact product names and spellings.
 - Do not invent facts about these technologies. Where something is undefined, say so and ask the owner.
 - Full analysis: `analysis/APML-ANALYSIS.md`. Doctrine draft: `docs/DOCTRINE.md`.
+
+Sprung terms (owner definitions, not yet formalized; do not invent formulas):
+- Voltage on Time: an economic force over a distribution of causes plus gifters as gains.
+- Attention Creation Principle: whether a group can be trusted as a sane individual over taxes, taxation and consumption.
+- Economic and mode: a person consumes 2 as a static membership for benefit, not cause. Economy travels, mode heals.
