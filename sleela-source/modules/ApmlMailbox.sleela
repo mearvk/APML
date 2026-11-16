@@ -1,0 +1,106 @@
+#sleela 3.1
+<< ApmlMailbox: a bounded mailbox for one party. It holds sequence numbers
+   into the message log, not copies of messages. There are two lanes: an
+   interrupt lane that is always drained first, and a normal lane in arrival
+   order. Both are fixed-size rings. When a lane is full, offer returns false
+   and the rejection is counted, so a slow party pushes back on its senders
+   instead of losing messages silently. >>
+class ApmlMailbox {
+  int owner = 0;
+  int cap = 16;
+  int[] normal = new int[16];
+  int nHead = 0;
+  int nCount = 0;
+  int[] urgent = new int[16];
+  int uHead = 0;
+  int uCount = 0;
+  int rejected = 0;
+  int delivered = 0;
+
+  void setOwner(int p) { owner = p; }
+  int getOwner() { return owner; }
+
+  boolean offer(int seq, boolean isInterrupt) {
+    if (isInterrupt) {
+      if (uCount >= cap) { rejected = rejected + 1; return false; }
+      urgent[(uHead + uCount) % cap] = seq;
+      uCount = uCount + 1;
+      return true;
+    }
+    if (nCount >= cap) { rejected = rejected + 1; return false; }
+    normal[(nHead + nCount) % cap] = seq;
+    nCount = nCount + 1;
+    return true;
+  }
+
+  < Remove and return the next sequence number, interrupts first, or -1 if empty. >
+  int take() {
+    if (uCount > 0) {
+      int s = urgent[uHead];
+      uHead = (uHead + 1) % cap;
+      uCount = uCount - 1;
+      delivered = delivered + 1;
+      return s;
+    }
+    if (nCount > 0) {
+      int s2 = normal[nHead];
+      nHead = (nHead + 1) % cap;
+      nCount = nCount - 1;
+      delivered = delivered + 1;
+      return s2;
+    }
+    return -1;
+  }
+
+  < Look without removing. This is what a POLL does. >
+  int peek() {
+    if (uCount > 0) { return urgent[uHead]; }
+    if (nCount > 0) { return normal[nHead]; }
+    return -1;
+  }
+
+  int pending() { return uCount + nCount; }
+  int pendingInterrupts() { return uCount; }
+  int rejectedCount() { return rejected; }
+  int deliveredCount() { return delivered; }
+  int capacity() { return cap; }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 103;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

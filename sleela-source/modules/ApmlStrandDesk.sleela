@@ -1,0 +1,175 @@
+#sleela 3.1
+<< ApmlStrandDesk: answers on behalf of the six strands. It drains a strand
+   mailbox, interrupts first, and answers each QUERY from that strand design
+   proposal. Topics a module may ask about: name, question, principle,
+   handoff, pair, guards, open. Unknown topics get the answer unknown topic
+   rather than a guess. Interrupts and notices are acknowledged by counting
+   them; the desk never acts on an interrupt by itself, it only reports it. >>
+class ApmlStrandDesk {
+  Strand1Apml s1 = new Strand1Apml();
+  Strand2Bloq s2 = new Strand2Bloq();
+  Strand3Bodi s3 = new Strand3Bodi();
+  Strand4Sprung s4 = new Strand4Sprung();
+  Strand5Runyn s5 = new Strand5Runyn();
+  Strand6Falthruu s6 = new Strand6Falthruu();
+  int answered = 0;
+  int interruptsSeen = 0;
+  int noticesSeen = 0;
+  int firstKindHandled = 0;
+
+  String nameOf(int n) {
+    if (n == 1) { return s1.name(); }
+    if (n == 2) { return s2.name(); }
+    if (n == 3) { return s3.name(); }
+    if (n == 4) { return s4.name(); }
+    if (n == 5) { return s5.name(); }
+    if (n == 6) { return s6.name(); }
+    return "unknown";
+  }
+
+  String questionOf(int n) {
+    if (n == 1) { return s1.question(); }
+    if (n == 2) { return s2.question(); }
+    if (n == 3) { return s3.question(); }
+    if (n == 4) { return s4.question(); }
+    if (n == 5) { return s5.question(); }
+    if (n == 6) { return s6.question(); }
+    return "unknown";
+  }
+
+  String principleOf(int n) {
+    if (n == 1) { return s1.principle(); }
+    if (n == 2) { return s2.principle(); }
+    if (n == 3) { return s3.principle(); }
+    if (n == 4) { return s4.principle(); }
+    if (n == 5) { return s5.principle(); }
+    if (n == 6) { return s6.principle(); }
+    return "unknown";
+  }
+
+  int handOffOf(int n) {
+    if (n == 1) { return s1.handOffTo(); }
+    if (n == 2) { return s2.handOffTo(); }
+    if (n == 3) { return s3.handOffTo(); }
+    if (n == 4) { return s4.handOffTo(); }
+    if (n == 5) { return s5.handOffTo(); }
+    if (n == 6) { return s6.handOffTo(); }
+    return -1;
+  }
+
+  int pairOf(int n) {
+    if (n == 1) { return s1.pairedWith(); }
+    if (n == 2) { return s2.pairedWith(); }
+    if (n == 3) { return s3.pairedWith(); }
+    if (n == 4) { return s4.pairedWith(); }
+    if (n == 5) { return s5.pairedWith(); }
+    if (n == 6) { return s6.pairedWith(); }
+    return -1;
+  }
+
+  int guardsOf(int n) {
+    if (n == 1) { return s1.agencyGuardCount(); }
+    if (n == 2) { return s2.agencyGuardCount(); }
+    if (n == 3) { return s3.agencyGuardCount(); }
+    if (n == 4) { return s4.agencyGuardCount(); }
+    if (n == 5) { return s5.agencyGuardCount(); }
+    if (n == 6) { return s6.agencyGuardCount(); }
+    return 0;
+  }
+
+  int opensOf(int n) {
+    if (n == 1) { return s1.openItemCount(); }
+    if (n == 2) { return s2.openItemCount(); }
+    if (n == 3) { return s3.openItemCount(); }
+    if (n == 4) { return s4.openItemCount(); }
+    if (n == 5) { return s5.openItemCount(); }
+    if (n == 6) { return s6.openItemCount(); }
+    return 0;
+  }
+
+  String answer(int n, String tp) {
+    if (tp == "name") { return nameOf(n); }
+    if (tp == "question") { return questionOf(n); }
+    if (tp == "principle") { return principleOf(n); }
+    if (tp == "handoff") { return nameOf(handOffOf(n)); }
+    if (tp == "pair") { return nameOf(pairOf(n)); }
+    if (tp == "guards") { return "" + guardsOf(n); }
+    if (tp == "open") { return "" + opensOf(n); }
+    return "unknown topic";
+  }
+
+  < Drain one strand mailbox. Returns how many envelopes were handled. >
+  int serve(ApmlBus bus, int strand) {
+    ApmlMessageLog lg = bus.getLog();
+    int handled = 0;
+    int seq = bus.receive(strand);
+    while (seq >= 0) {
+      int k = lg.kindAt(seq);
+      if (handled == 0) { firstKindHandled = k; }
+      if (k == 2) {
+        String a = answer(strand, lg.topicAt(seq));
+        bus.reply(strand, lg.fromAt(seq), lg.corrAt(seq), lg.topicAt(seq), a, "desk:" + nameOf(strand));
+        answered = answered + 1;
+      }
+      if (k == 3) { interruptsSeen = interruptsSeen + 1; }
+      if (k == 9) { noticesSeen = noticesSeen + 1; }
+      handled = handled + 1;
+      seq = bus.receive(strand);
+    }
+    return handled;
+  }
+
+  int serveAll(ApmlBus bus) {
+    int t = 0;
+    int n = 1;
+    while (n <= 6) {
+      t = t + serve(bus, n);
+      n = n + 1;
+    }
+    return t;
+  }
+
+  int answeredCount() { return answered; }
+  int interruptsCount() { return interruptsSeen; }
+  int noticesCount() { return noticesSeen; }
+  int firstKind() { return firstKindHandled; }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 105;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

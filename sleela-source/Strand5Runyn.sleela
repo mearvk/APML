@@ -1,0 +1,137 @@
+#sleela 3.1
+<< Strand5Runyn: initial design proposal for strand 5 of 6, Runyn, the refolding.
+   Statements marked owner claim come from the owner site text or the owner
+   chat descriptions. Everything else is a proposal by the drafter and is open
+   to rejection. Source documents: docs/ENGINEERING-PRINCIPLES.md and
+   analysis/APML-ANALYSIS.md. >>
+class Strand5Runyn {
+  int number() { return 5; }
+  String name() { return "Runyn"; }
+  String role() { return "the refolding"; }
+  String stage() { return "Producial, review"; }
+  String question() { return "After the work has grown, is the system still what the description says it is?"; }
+  String principle() { return "The description must be recoverable from the code, so the two can always be compared."; }
+  String handOffText() { return "Finding drift is not enough; the fix must be carried through the system, so Falthruu does that."; }
+  < The strand this one hands off to; strand 6 hands back to strand 1. >
+  int handOffTo() { return 6; }
+  < The strand this one faces when the strand is folded in the middle (proposal). >
+  int pairedWith() { return 2; }
+
+  int ownerClaimCount() { return 4; }
+  String ownerClaim(int i) {
+    String[] a = {
+      "Software sprawl can occur even with Bloq, APML and Bodi.",
+      "Runyn refolds the software during the development cycle into clean, correct APML and Java source.",
+      "The result shows whether the software is heading in the right direction and is ready for architectural review.",
+      "The cost of late redesign is a cost in time and money."
+    };
+    return a[i];
+  }
+
+  int goalCount() { return 3; }
+  String goal(int i) {
+    String[] a = {
+      "The description can be recovered from the code at any time.",
+      "Drift between description and code is measured before it becomes expensive.",
+      "Architectural review works from evidence and not from opinion."
+    };
+    return a[i];
+  }
+
+  int procedureCount() { return 3; }
+  String procedure(int i) {
+    String[] a = {
+      "Run the refold often, as tests are run.",
+      "Read each reported difference as an early warning.",
+      "Present the description, the refold report and the log at review."
+    };
+    return a[i];
+  }
+
+  int signalInCount() { return 2; }
+  String signalIn(int i) {
+    String[] a = {
+      "Source code from the working tree.",
+      "The ordered log from Sprung (strand 4)."
+    };
+    return a[i];
+  }
+
+  int signalOutCount() { return 2; }
+  String signalOut(int i) {
+    String[] a = {
+      "A refold report listing new dependencies, cycles and oversized parts.",
+      "A recovered description for comparison with the original (strand 1)."
+    };
+    return a[i];
+  }
+
+  int agencyGuardCount() { return 3; }
+  String agencyGuard(int i) {
+    String[] a = {
+      "The refold report is advisory and a person decides what to do with it.",
+      "The report states exactly what was checked and what was not.",
+      "Refolding never modifies the original description."
+    };
+    return a[i];
+  }
+
+  int implementationCount() { return 3; }
+  String implementation(int i) {
+    String[] a = {
+      "A reader for Java source that emits APML.",
+      "A drift report comparing the recovered description with the original.",
+      "A round-trip test: generate, refold, compare."
+    };
+    return a[i];
+  }
+
+  int openItemCount() { return 2; }
+  String openItem(int i) {
+    String[] a = {
+      "Clean, correct and right direction are not yet defined in numbers.",
+      "No example of a refold report exists yet."
+    };
+    return a[i];
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal with nothing
+     built yet. >>
+  String metaVersion = "0.1.0";
+  int metaId = 5;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

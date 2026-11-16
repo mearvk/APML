@@ -1,0 +1,137 @@
+#sleela 3.1
+<< Strand2Bloq: initial design proposal for strand 2 of 6, Bloq, the making.
+   Statements marked owner claim come from the owner site text or the owner
+   chat descriptions. Everything else is a proposal by the drafter and is open
+   to rejection. Source documents: docs/ENGINEERING-PRINCIPLES.md and
+   analysis/APML-ANALYSIS.md. >>
+class Strand2Bloq {
+  int number() { return 2; }
+  String name() { return "Bloq"; }
+  String role() { return "the making"; }
+  String stage() { return "Cognitive to producial"; }
+  String question() { return "How does the description become working source code without hand-building the structure each time?"; }
+  String principle() { return "What can be generated from the description should be generated, and people should spend their effort on what cannot."; }
+  String handOffText() { return "A generated program must be run, reached and maintained, so Bodi handles the running system."; }
+  < The strand this one hands off to; strand 6 hands back to strand 1. >
+  int handOffTo() { return 3; }
+  < The strand this one faces when the strand is folded in the middle (proposal). >
+  int pairedWith() { return 5; }
+
+  int ownerClaimCount() { return 4; }
+  String ownerClaim(int i) {
+    String[] a = {
+      "Bloq is the implementation layer above hand-written production source.",
+      "Bloq interprets APML and produces correct, forward-looking Java source for further development.",
+      "Scope runs from Java Swing to large systems.",
+      "Architects and developers share one technology and one document."
+    };
+    return a[i];
+  }
+
+  int goalCount() { return 3; }
+  String goal(int i) {
+    String[] a = {
+      "Structure is generated, repeatably, from the description.",
+      "Generated code matches the structure in the description.",
+      "Regeneration does not destroy hand-written logic."
+    };
+    return a[i];
+  }
+
+  int procedureCount() { return 3; }
+  String procedure(int i) {
+    String[] a = {
+      "Do not edit generated structure by hand; change the description and generate again.",
+      "Place hand-written logic only where the generator leaves room for it.",
+      "Build after every generation."
+    };
+    return a[i];
+  }
+
+  int signalInCount() { return 2; }
+  String signalIn(int i) {
+    String[] a = {
+      "A validated description from APML (strand 1).",
+      "Regeneration request after a Falthruu change (strand 6)."
+    };
+    return a[i];
+  }
+
+  int signalOutCount() { return 2; }
+  String signalOut(int i) {
+    String[] a = {
+      "Java source for the system.",
+      "A generation manifest listing each generated file and the description element it came from."
+    };
+    return a[i];
+  }
+
+  int agencyGuardCount() { return 3; }
+  String agencyGuard(int i) {
+    String[] a = {
+      "Generated files are marked as generated and list their source element, so no one mistakes machine output for human authorship.",
+      "Hand-written regions are preserved and never silently overwritten.",
+      "Generation is deterministic: the same description yields the same source."
+    };
+    return a[i];
+  }
+
+  int implementationCount() { return 3; }
+  String implementation(int i) {
+    String[] a = {
+      "A generator that reads the APML subset and emits Java.",
+      "Protected regions for hand-written code.",
+      "A manifest file tying each output file to its source element."
+    };
+    return a[i];
+  }
+
+  int openItemCount() { return 2; }
+  String openItem(int i) {
+    String[] a = {
+      "The word correct is used on the site without a stated guarantee.",
+      "What happens to hand edits when the description changes is not stated."
+    };
+    return a[i];
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal with nothing
+     built yet. >>
+  String metaVersion = "0.1.0";
+  int metaId = 2;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

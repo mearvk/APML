@@ -1,0 +1,140 @@
+#sleela 3.1
+<< Strand4Sprung: initial design proposal for strand 4 of 6, Sprung, the message and the time.
+   Statements marked owner claim come from the owner site text or the owner
+   chat descriptions. Everything else is a proposal by the drafter and is open
+   to rejection. Source documents: docs/ENGINEERING-PRINCIPLES.md and
+   analysis/APML-ANALYSIS.md. >>
+class Strand4Sprung {
+  int number() { return 4; }
+  String name() { return "Sprung"; }
+  String role() { return "the message and the time"; }
+  String stage() { return "Producial, messaging"; }
+  String question() { return "What passes between the parts, and how is it named, ordered and acted on?"; }
+  String principle() { return "A message carries its own name as time, and what happens over time can create, change or end things."; }
+  String handOffText() { return "A log of what happened lets two later checks work: Runyn checks the code against its description and Falthruu carries a change through."; }
+  < The strand this one hands off to; strand 6 hands back to strand 1. >
+  int handOffTo() { return 5; }
+  < The strand this one faces when the strand is folded in the middle (proposal). >
+  int pairedWith() { return 3; }
+
+  int ownerClaimCount() { return 4; }
+  String ownerClaim(int i) {
+    String[] a = {
+      "Sprung is an envoy to messaging; messages are classified as voltage on time and each carries its own name as time.",
+      "Sprung is to be a scripting language with ingress and egress for Java and SLeeLa, as a sub-mechanism of the framework.",
+      "Sprung can call Create, Alter or Destroy on time as a mechanism, and on the symptom of a function.",
+      "The Attention Creation Principle asks whether a group can be trusted as a sane individual with respect to taxes, taxation and consumption."
+    };
+    return a[i];
+  }
+
+  int goalCount() { return 3; }
+  String goal(int i) {
+    String[] a = {
+      "Every message is identified by its time and kept in an ordered, append-only log.",
+      "Create, Alter and Destroy are explicit, recorded actions and never silent edits.",
+      "Java and SLeeLa code can call Sprung scripts and be called by them."
+    };
+    return a[i];
+  }
+
+  int procedureCount() { return 3; }
+  String procedure(int i) {
+    String[] a = {
+      "Treat time as part of every message identity.",
+      "Keep the log append-only.",
+      "Record the actor and the reason with every Create, Alter or Destroy."
+    };
+    return a[i];
+  }
+
+  int signalInCount() { return 2; }
+  String signalIn(int i) {
+    String[] a = {
+      "Calls and mapping changes from Bodi (strand 3).",
+      "Messages sent by Java and SLeeLa programs."
+    };
+    return a[i];
+  }
+
+  int signalOutCount() { return 2; }
+  String signalOut(int i) {
+    String[] a = {
+      "The ordered log, used as evidence by Runyn and Falthruu (strands 5 and 6).",
+      "Patterns found by comparing windows of time."
+    };
+    return a[i];
+  }
+
+  int agencyGuardCount() { return 3; }
+  String agencyGuard(int i) {
+    String[] a = {
+      "The log is append-only so no actor can erase what happened; Destroy ends a thing but never its record.",
+      "Scoring terms are never used to rank or exclude a person without a stated, reviewable formula.",
+      "Every automatic action taken in response to a function symptom names the rule that caused it."
+    };
+    return a[i];
+  }
+
+  int implementationCount() { return 3; }
+  String implementation(int i) {
+    String[] a = {
+      "An append-only time-named message log.",
+      "The Create, Alter and Destroy verbs with required actor and reason.",
+      "A bridge so Java and SLeeLa can send and receive messages."
+    };
+    return a[i];
+  }
+
+  int openItemCount() { return 5; }
+  String openItem(int i) {
+    String[] a = {
+      "The message format is not defined.",
+      "How a script binds to a Bodi address is not defined.",
+      "Whether time names are wall-clock, logical or both is not decided.",
+      "What Destroy guarantees is not stated.",
+      "The scoring terms have no formulas yet (see owedTerm)."
+    };
+    return a[i];
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal with nothing
+     built yet. >>
+  String metaVersion = "0.1.0";
+  int metaId = 4;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

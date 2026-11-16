@@ -1,0 +1,203 @@
+#sleela 3.1
+<< DesignKnit: ties the six strand design proposals together and checks the
+   properties the proposals claim: the hand-off chain is a closed loop, the
+   middle fold pairs 1 with 6, 2 with 5 and 3 with 4, every strand carries at
+   least one agency guard, and every strand states what is still open. Run it
+   with: sleela run DesignKnit.sleela >>
+class DesignKnit {
+  Strand1Apml s1 = new Strand1Apml();
+  Strand2Bloq s2 = new Strand2Bloq();
+  Strand3Bodi s3 = new Strand3Bodi();
+  Strand4Sprung s4 = new Strand4Sprung();
+  Strand5Runyn s5 = new Strand5Runyn();
+  Strand6Falthruu s6 = new Strand6Falthruu();
+
+  int failures = 0;
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  int handOffOf(int n) {
+    if (n == 1) { return s1.handOffTo(); }
+    if (n == 2) { return s2.handOffTo(); }
+    if (n == 3) { return s3.handOffTo(); }
+    if (n == 4) { return s4.handOffTo(); }
+    if (n == 5) { return s5.handOffTo(); }
+    if (n == 6) { return s6.handOffTo(); }
+    return -1;
+  }
+
+  int pairOf(int n) {
+    if (n == 1) { return s1.pairedWith(); }
+    if (n == 2) { return s2.pairedWith(); }
+    if (n == 3) { return s3.pairedWith(); }
+    if (n == 4) { return s4.pairedWith(); }
+    if (n == 5) { return s5.pairedWith(); }
+    if (n == 6) { return s6.pairedWith(); }
+    return -1;
+  }
+
+  int guardsOf(int n) {
+    if (n == 1) { return s1.agencyGuardCount(); }
+    if (n == 2) { return s2.agencyGuardCount(); }
+    if (n == 3) { return s3.agencyGuardCount(); }
+    if (n == 4) { return s4.agencyGuardCount(); }
+    if (n == 5) { return s5.agencyGuardCount(); }
+    if (n == 6) { return s6.agencyGuardCount(); }
+    return -1;
+  }
+
+  int opensOf(int n) {
+    if (n == 1) { return s1.openItemCount(); }
+    if (n == 2) { return s2.openItemCount(); }
+    if (n == 3) { return s3.openItemCount(); }
+    if (n == 4) { return s4.openItemCount(); }
+    if (n == 5) { return s5.openItemCount(); }
+    if (n == 6) { return s6.openItemCount(); }
+    return -1;
+  }
+
+  String nameOf(int n) {
+    if (n == 1) { return s1.name(); }
+    if (n == 2) { return s2.name(); }
+    if (n == 3) { return s3.name(); }
+    if (n == 4) { return s4.name(); }
+    if (n == 5) { return s5.name(); }
+    if (n == 6) { return s6.name(); }
+    return "unknown";
+  }
+
+  int principleCount() { return 10; }
+  String principle(int i) {
+    String[] a = {
+      "Single Description",
+      "Structure Before Function",
+      "Generate the Repeatable",
+      "Stable Names",
+      "Time Is Identity",
+      "Round Trip",
+      "Guarded Reach",
+      "Safe Change",
+      "Review by Evidence",
+      "Honest Claims"
+    };
+    return a[i];
+  }
+
+  int owedTermCount() { return 6; }
+  String owedTerm(int i) {
+    String[] a = {
+      "Voltage on Time",
+      "Attention Creation Principle",
+      "Economic and mode",
+      "Two",
+      "Public speaker is born",
+      "Creative time-force equation"
+    };
+    return a[i];
+  }
+
+  int owedMeaningCount() { return 6; }
+  String owedMeaning(int i) {
+    String[] a = {
+      "Economic force over a distribution of causes, with gifters counted as gains.",
+      "Whether a group can be trusted as a sane individual with respect to taxes, taxation and consumption.",
+      "Economy travels and mode heals; a person consumes two for benefit and not for cause.",
+      "Twice the gauge of a standard reticle of a standard product, usually the gauge for a citizen or a mechanic.",
+      "An economic circle settles at a home near a man and is known to its kind and listeners.",
+      "County government as proceeds, with special payment for announcements and certain favors."
+    };
+    return a[i];
+  }
+
+  int owedNeedsCount() { return 6; }
+  String owedNeeds(int i) {
+    String[] a = {
+      "A formula, units and one numeric example.",
+      "The rule for treating a group as one actor.",
+      "What is consumed and what heals.",
+      "The base gauge as a number.",
+      "The system event this marks.",
+      "The equation written out with its terms."
+    };
+    return a[i];
+  }
+
+  < Follow hand-offs from strand 1 for six steps; a closed loop returns to 1. >
+  boolean loopCloses() {
+    int at = 1;
+    int steps = 0;
+    while (steps < 6) {
+      at = handOffOf(at);
+      steps = steps + 1;
+    }
+    return at == 1;
+  }
+
+  < Every strand is reached exactly once on the way round. >
+  boolean loopVisitsAll() {
+    int at = 1;
+    int seen = 0;
+    int steps = 0;
+    while (steps < 6) {
+      seen = seen + at;
+      at = handOffOf(at);
+      steps = steps + 1;
+    }
+    return seen == 21;
+  }
+
+  boolean pairingHolds() {
+    int n = 1;
+    while (n <= 6) {
+      int p = pairOf(n);
+      if (pairOf(p) != n) { return false; }
+      if (p + n != 7) { return false; }
+      n = n + 1;
+    }
+    return true;
+  }
+
+  boolean everyStrandGuarded() {
+    int n = 1;
+    while (n <= 6) {
+      if (guardsOf(n) < 1) { return false; }
+      n = n + 1;
+    }
+    return true;
+  }
+
+  boolean everyStrandHonest() {
+    int n = 1;
+    while (n <= 6) {
+      if (opensOf(n) < 1) { return false; }
+      n = n + 1;
+    }
+    return true;
+  }
+
+  void main() {
+    print("APML six-strand design proposal");
+    int n = 1;
+    while (n <= 6) {
+      print(n + " " + nameOf(n) + " hands off to " + nameOf(handOffOf(n)) + ", faces " + nameOf(pairOf(n)));
+      n = n + 1;
+    }
+    expect(loopCloses(), "hand-off chain closes after six steps");
+    expect(loopVisitsAll(), "hand-off chain visits all six strands once");
+    expect(pairingHolds(), "middle fold pairs 1-6, 2-5, 3-4");
+    expect(everyStrandGuarded(), "every strand carries an agency guard");
+    expect(everyStrandHonest(), "every strand states an open item");
+    print("cross-cutting principles: " + principleCount());
+    print("terms still owed a definition by the owner: " + owedTermCount());
+    int t = 0;
+    while (t < owedTermCount()) {
+      print("  owed: " + owedTerm(t) + " | needs: " + owedNeeds(t));
+      t = t + 1;
+    }
+    if (failures == 0) { print("knit: all checks passed"); }
+    else { print("knit: " + failures + " check(s) failed"); }
+  }
+}

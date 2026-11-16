@@ -1,0 +1,123 @@
+#sleela 3.1
+<< ApmlExchange: co-exchange between two parties under one correlation id.
+   It is a small two-phase agreement:
+
+     state 0 idle -> offer -> 1 offered -> counter -> 2 countered
+       -> ack from the offering party -> 3 committed
+     any party may decline at state 1 or 2 -> 4 declined
+     no progress within the tick limit -> 5 expired
+
+   Nothing is committed unless both parties have taken an accountable step:
+   the initiator offered and acknowledged, the responder countered. Every step
+   is a guarded envelope on the bus, so each one is logged with an actor and a
+   reason. A committed or declined exchange cannot move again. >>
+class ApmlExchange {
+  int state = 0;
+  int corr = -1;
+  int initiator = 0;
+  int responder = 0;
+  int startedAt = 0;
+  int tickLimit = 5;
+  int ticks = 0;
+  String terms = "";
+
+  int getState() { return state; }
+  int getCorr() { return corr; }
+  String getTerms() { return terms; }
+
+  String stateName() {
+    String[] a = { "idle", "offered", "countered", "committed", "declined", "expired" };
+    return a[state];
+  }
+
+  boolean finished() {
+    if (state >= 3) { return true; }
+    return false;
+  }
+
+  boolean offer(ApmlBus bus, int from, int to, String t, String actor, String why) {
+    if (state != 0) { return false; }
+    int c = bus.newCorrelation();
+    if (bus.step(4, from, to, c, "exchange", t, actor, why) < 0) { return false; }
+    corr = c;
+    initiator = from;
+    responder = to;
+    terms = t;
+    state = 1;
+    return true;
+  }
+
+  boolean counter(ApmlBus bus, int from, String t, String actor, String why) {
+    if (state != 1) { return false; }
+    if (from != responder) { return false; }
+    if (bus.step(5, from, initiator, corr, "exchange", t, actor, why) < 0) { return false; }
+    terms = t;
+    state = 2;
+    return true;
+  }
+
+  boolean ack(ApmlBus bus, int from, String actor, String why) {
+    if (state != 2) { return false; }
+    if (from != initiator) { return false; }
+    if (bus.step(6, from, responder, corr, "exchange", terms, actor, why) < 0) { return false; }
+    state = 3;
+    return true;
+  }
+
+  boolean decline(ApmlBus bus, int from, String actor, String why) {
+    if (finished()) { return false; }
+    if (state == 0) { return false; }
+    int other = initiator;
+    if (from == initiator) { other = responder; }
+    if (bus.step(7, from, other, corr, "exchange", terms, actor, why) < 0) { return false; }
+    state = 4;
+    return true;
+  }
+
+  < Called once per scheduler tick. Unfinished exchanges expire after tickLimit ticks. >
+  void tick() {
+    if (finished()) { return; }
+    if (state == 0) { return; }
+    ticks = ticks + 1;
+    if (ticks > tickLimit) { state = 5; }
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 106;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

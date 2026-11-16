@@ -1,0 +1,143 @@
+#sleela 3.1
+<< ApmlMessageLog: the append-only log every envelope is written to before it
+   is delivered. This is the Sprung principle Time Is Identity applied to the
+   modules: each entry gets a sequence number and a logical (Lamport) time, and
+   the class has no method that edits or removes an entry. When the log is full
+   append returns -1 and the bus refuses to deliver, so nothing is ever
+   delivered without being written down first. >>
+class ApmlMessageLog {
+  int capacity = 256;
+  int size = 0;
+  int clock = 0;
+  int[] kind = new int[256];
+  int[] scope = new int[256];
+  int[] from = new int[256];
+  int[] to = new int[256];
+  int[] corr = new int[256];
+  int[] prio = new int[256];
+  int[] time = new int[256];
+  String[] topic = new String[256];
+  String[] body = new String[256];
+  String[] actor = new String[256];
+  String[] reason = new String[256];
+
+  < Lamport rule: on receipt of a stamp larger than the local clock, jump past it. >
+  int observe(int seenTime) {
+    if (seenTime > clock) { clock = seenTime; }
+    clock = clock + 1;
+    return clock;
+  }
+
+  int append(int k, int sc, int f, int t, int c, int p, String tp, String b, String a, String r) {
+    if (size >= capacity) { return -1; }
+    int seq = size;
+    kind[seq] = k;
+    scope[seq] = sc;
+    from[seq] = f;
+    to[seq] = t;
+    corr[seq] = c;
+    prio[seq] = p;
+    clock = clock + 1;
+    time[seq] = clock;
+    topic[seq] = tp;
+    body[seq] = b;
+    actor[seq] = a;
+    reason[seq] = r;
+    size = size + 1;
+    return seq;
+  }
+
+  int count() { return size; }
+  int kindAt(int s) { return kind[s]; }
+  int scopeAt(int s) { return scope[s]; }
+  int fromAt(int s) { return from[s]; }
+  int toAt(int s) { return to[s]; }
+  int corrAt(int s) { return corr[s]; }
+  int prioAt(int s) { return prio[s]; }
+  int timeAt(int s) { return time[s]; }
+  String topicAt(int s) { return topic[s]; }
+  String bodyAt(int s) { return body[s]; }
+  String actorAt(int s) { return actor[s]; }
+  String reasonAt(int s) { return reason[s]; }
+
+  int countKind(int k) {
+    int n = 0;
+    int i = 0;
+    while (i < size) {
+      if (kind[i] == k) { n = n + 1; }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  int countCorr(int c) {
+    int n = 0;
+    int i = 0;
+    while (i < size) {
+      if (corr[i] == c) { n = n + 1; }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  < Logical time strictly increases with sequence number. >
+  boolean timeIsOrdered() {
+    int i = 1;
+    while (i < size) {
+      if (time[i] <= time[i - 1]) { return false; }
+      i = i + 1;
+    }
+    return true;
+  }
+
+  < Find the first entry of a given kind for a correlation id, or -1. >
+  int findKindForCorr(int k, int c) {
+    int i = 0;
+    while (i < size) {
+      if (kind[i] == k) {
+        if (corr[i] == c) { return i; }
+      }
+      i = i + 1;
+    }
+    return -1;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 102;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

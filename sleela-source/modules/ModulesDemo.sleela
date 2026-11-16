@@ -1,0 +1,205 @@
+#sleela 3.1
+<< ModulesDemo: runs every messaging pattern a module may use against the six
+   strands and checks each one. Build and run from sleela-source:
+     sleela compile Strand*.sleela modules/*.sleela -o build/modules.sleela
+     sleela run build/modules.sleela
+   Party ids: 1 APML, 2 Bloq, 3 Bodi, 4 Sprung, 5 Runyn, 6 Falthruu,
+   7 module-A, 8 module-B. >>
+class ModulesDemo {
+  ApmlBus bus = new ApmlBus();
+  ApmlStrandDesk desk = new ApmlStrandDesk();
+  ApmlMessageKind kinds = new ApmlMessageKind();
+  int failures = 0;
+  int passes = 0;
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  < Micro query and reply, correlated. >
+  void microQuery() {
+    print("-- micro: query and reply");
+    ApmlMessageLog lg = bus.getLog();
+    int c = bus.query(7, 1, "principle", "module-A");
+    expect(c > 0, "query to APML accepted");
+    desk.serveAll(bus);
+    int s = bus.receive(7);
+    expect(s >= 0, "module-A received an answer");
+    expect(lg.kindAt(s) == 8, "answer is a REPLY");
+    expect(lg.corrAt(s) == c, "REPLY carries the query correlation id");
+    Strand1Apml a = new Strand1Apml();
+    expect(lg.bodyAt(s) == a.principle(), "REPLY body is the APML principle");
+    print("   APML principle: " + lg.bodyAt(s));
+  }
+
+  < Ask every strand where it hands off; the answers trace the loop. >
+  void microQueryEachStrand() {
+    print("-- micro: ask each strand for its hand-off");
+    ApmlMessageLog lg = bus.getLog();
+    int n = 1;
+    while (n <= 6) {
+      bus.query(7, n, "handoff", "module-A");
+      n = n + 1;
+    }
+    desk.serveAll(bus);
+    int got = 0;
+    int s = bus.receive(7);
+    while (s >= 0) {
+      print("   " + kinds.partyName(lg.fromAt(s)) + " hands off to " + lg.bodyAt(s));
+      got = got + 1;
+      s = bus.receive(7);
+    }
+    expect(got == 6, "six replies, one per strand");
+  }
+
+  void unknownTopic() {
+    print("-- micro: unknown topic");
+    ApmlMessageLog lg = bus.getLog();
+    bus.query(8, 4, "weather", "module-B");
+    desk.serveAll(bus);
+    int s = bus.receive(8);
+    expect(lg.bodyAt(s) == "unknown topic", "unknown topic is reported, not guessed");
+  }
+
+  < Poll looks without taking. >
+  void pollDoesNotConsume() {
+    print("-- micro: poll");
+    expect(bus.poll(8) == -1, "poll on an empty mailbox returns -1");
+    bus.notice(7, 8, "status", "build green", "module-A");
+    int before = bus.pending(8);
+    int p = bus.poll(8);
+    int after = bus.pending(8);
+    expect(p >= 0, "poll sees the waiting notice");
+    expect(before == after, "poll leaves the mailbox unchanged");
+    expect(bus.receive(8) == p, "receive returns the polled envelope");
+  }
+
+  < An interrupt is handled before an earlier notice. >
+  void interruptPreempts() {
+    print("-- micro: interrupt");
+    bus.notice(7, 3, "status", "routine", "module-A");
+    int s = bus.interrupt(7, 3, "patch", "repoint function f2", "operator J. Doe", "CVE fix pending review");
+    expect(s >= 0, "interrupt with actor and reason accepted");
+    ApmlStrandDesk d = new ApmlStrandDesk();
+    d.serve(bus, 3);
+    expect(d.firstKind() == 3, "Bodi handled the interrupt before the earlier notice");
+    expect(d.interruptsCount() == 1, "desk counted, and did not act on, the interrupt");
+  }
+
+  void interruptGuard() {
+    print("-- guard: interrupt without a reason");
+    ApmlMessageLog lg = bus.getLog();
+    int before = lg.count();
+    int r1 = bus.refusedByGuard();
+    int s = bus.interrupt(7, 3, "patch", "repoint", "operator J. Doe", "");
+    expect(s == -1, "interrupt without a reason is refused");
+    expect(bus.refusedByGuard() == r1 + 1, "refusal is counted");
+    expect(lg.count() == before, "refused interrupt was not logged or delivered");
+  }
+
+  < Macro broadcast: one correlation id, six deliveries. >
+  void macroBroadcast() {
+    print("-- macro: broadcast to all strands");
+    ApmlMessageLog lg = bus.getLog();
+    int c = bus.broadcast(7, "release", "freeze for review 2026-11-20", "release lead", "quarterly review");
+    expect(c > 0, "broadcast accepted");
+    expect(lg.countCorr(c) == 6, "one correlation id spans six envelopes");
+    int n = 1;
+    int each = 0;
+    while (n <= 6) {
+      if (bus.pending(n) == 1) { each = each + 1; }
+      n = n + 1;
+    }
+    expect(each == 6, "every strand has exactly one waiting notice");
+    desk.serveAll(bus);
+    int c2 = bus.broadcast(7, "release", "freeze", "", "no actor");
+    expect(c2 == -1, "broadcast without an actor is refused");
+  }
+
+  < Co-exchange that commits. >
+  void exchangeCommit() {
+    print("-- macro: co-exchange that commits");
+    ApmlMessageLog lg = bus.getLog();
+    ApmlExchange x = new ApmlExchange();
+    expect(x.offer(bus, 7, 5, "refold weekly", "module-A lead", "drift rising"), "module-A offers to Runyn");
+    expect(x.counter(bus, 5, "refold twice weekly", "Runyn owner", "two branches active"), "Runyn counters");
+    expect(x.ack(bus, 7, "module-A lead", "accept counter"), "module-A acknowledges");
+    expect(x.getState() == 3, "exchange is committed");
+    expect(x.getTerms() == "refold twice weekly", "committed terms are the counter terms");
+    int c = x.getCorr();
+    expect(lg.findKindForCorr(4, c) >= 0, "OFFER is in the log");
+    expect(lg.findKindForCorr(5, c) >= 0, "COUNTER is in the log");
+    expect(lg.findKindForCorr(6, c) >= 0, "ACK is in the log");
+    expect(x.decline(bus, 5, "Runyn owner", "late change of mind") == false, "a committed exchange cannot be declined");
+    bus.receive(5);
+    bus.receive(5);
+    bus.receive(7);
+  }
+
+  void exchangeDeclineAndWrongParty() {
+    print("-- macro: co-exchange declined, and a wrong-party step");
+    ApmlExchange x = new ApmlExchange();
+    x.offer(bus, 8, 6, "rewrite history of branch b", "module-B lead", "rename field");
+    expect(x.counter(bus, 2, "other terms", "Bloq owner", "not a party") == false, "a non-party cannot counter");
+    expect(x.decline(bus, 6, "Falthruu owner", "branch b is published; extend instead"), "Falthruu declines");
+    expect(x.getState() == 4, "exchange is declined");
+    expect(x.ack(bus, 8, "module-B lead", "try anyway") == false, "a declined exchange cannot be acknowledged");
+    bus.receive(6);
+    bus.receive(8);
+  }
+
+  void exchangeExpires() {
+    print("-- macro: co-exchange that expires");
+    ApmlExchange x = new ApmlExchange();
+    x.offer(bus, 7, 2, "regenerate module m", "module-A lead", "schema change");
+    int t = 0;
+    while (t < 6) { x.tick(); t = t + 1; }
+    expect(x.getState() == 5, "unanswered exchange expires after the tick limit");
+    expect(x.counter(bus, 2, "late", "Bloq owner", "late") == false, "an expired exchange cannot continue");
+    bus.receive(2);
+  }
+
+  < A full mailbox pushes back instead of dropping messages. >
+  void backpressure() {
+    print("-- backpressure: bounded mailbox");
+    int i = 0;
+    int ok = 0;
+    while (i < 16) {
+      if (bus.notice(7, 8, "load", "item", "module-A") >= 0) { ok = ok + 1; }
+      i = i + 1;
+    }
+    int full = bus.refusedAsFull();
+    int s = bus.notice(7, 8, "load", "one too many", "module-A");
+    expect(ok == 16, "sixteen notices fit");
+    expect(s == -1, "the seventeenth is refused");
+    expect(bus.refusedAsFull() == full + 1, "the refusal is counted");
+    while (bus.receive(8) >= 0) { i = i + 1; }
+  }
+
+  void logChecks() {
+    print("-- log");
+    ApmlMessageLog lg = bus.getLog();
+    expect(lg.timeIsOrdered(), "logical time strictly increases through the log");
+    print("   entries: " + lg.count() + ", queries: " + lg.countKind(2) + ", replies: " + lg.countKind(8) + ", interrupts: " + lg.countKind(3));
+    expect(lg.countKind(2) == lg.countKind(8), "every query was answered");
+  }
+
+  void main() {
+    print("APML modules: micro and macro messaging with the six strands");
+    microQuery();
+    microQueryEachStrand();
+    unknownTopic();
+    pollDoesNotConsume();
+    interruptPreempts();
+    interruptGuard();
+    macroBroadcast();
+    exchangeCommit();
+    exchangeDeclineAndWrongParty();
+    exchangeExpires();
+    backpressure();
+    logChecks();
+    if (failures == 0) { print("modules: all " + passes + " checks passed"); }
+    else { print("modules: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}

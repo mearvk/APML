@@ -1,0 +1,91 @@
+#sleela 3.1
+<< ApmlMessageKind: the catalogue of message kinds and scopes used by every
+   module that talks to the six strands. Codes are plain ints so any class can
+   pass them without reaching into another class for a constant.
+
+   Kinds:  1 POLL       a module asks a mailbox whether anything is waiting
+           2 QUERY      a module asks a strand a question and expects a REPLY
+           3 INTERRUPT  a priority message that is delivered before all others
+           4 OFFER      first step of a co-exchange between two parties
+           5 COUNTER    second step of a co-exchange
+           6 ACK        a party consents to a co-exchange or confirms receipt
+           7 DECLINE    a party refuses a co-exchange
+           8 REPLY      the answer to a QUERY, carrying its correlation id
+           9 NOTICE     a one-way statement with no answer expected
+
+   Scopes: 1 MICRO      one sender, one receiver, one envelope
+           2 MACRO      one correlation id spanning many envelopes, either a
+                        fan-out to all six strands or a multi-step exchange >>
+class ApmlMessageKind {
+  int kindCount() { return 9; }
+
+  String kindName(int k) {
+    String[] a = { "NONE", "POLL", "QUERY", "INTERRUPT", "OFFER", "COUNTER", "ACK", "DECLINE", "REPLY", "NOTICE" };
+    if (k < 0) { return "NONE"; }
+    if (k > 9) { return "NONE"; }
+    return a[k];
+  }
+
+  String scopeName(int s) {
+    if (s == 1) { return "MICRO"; }
+    if (s == 2) { return "MACRO"; }
+    return "NONE";
+  }
+
+  < True for kinds that change what a party will do and so must name an actor and a reason. >
+  boolean needsAccountableActor(int k) {
+    if (k == 3) { return true; }
+    if (k == 4) { return true; }
+    if (k == 5) { return true; }
+    if (k == 6) { return true; }
+    if (k == 7) { return true; }
+    return false;
+  }
+
+  < Party ids: 1 to 6 are the strands, 7 and 8 are modules. 0 means all strands. >
+  String partyName(int p) {
+    String[] a = { "ALL-STRANDS", "APML", "Bloq", "Bodi", "Sprung", "Runyn", "Falthruu", "module-A", "module-B" };
+    if (p < 0) { return "unknown"; }
+    if (p > 8) { return "unknown"; }
+    return a[p];
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 101;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}
