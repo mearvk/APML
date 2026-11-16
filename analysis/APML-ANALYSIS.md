@@ -16,9 +16,9 @@ On the Bodi page (page 3), the overview (three paragraphs, ending "This is
 Bodi. /hello") appears four times in a row: once as the page body and once
 under each of the headings "Design Goals", "ROI Considerations" and
 "Progress Inventory". The text is identical each time. Only the headings
-differ. Pages 5 and 6 (the copies) were also sent with this same headed
-structure, so the headings are probably a template shared across the
-technology pages.
+differ. The text for pages 5 and 6 (the copies) has not been supplied. If
+they carry the same headings, the headings are probably a template shared
+across the technology pages, but that is unconfirmed.
 
 Consequences:
 - The headings read as the quality "cordials" the owner described: Design Goals (design intent), ROI Considerations (economic value) and Progress Inventory (state of the work). This is an inference from the headings alone.
