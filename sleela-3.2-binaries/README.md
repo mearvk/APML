@@ -55,3 +55,11 @@ Built from the same SLeeLa checkout by running `make -C <module> all` for each m
 - Converter (`lib/java/converter`): a SLeeLa library, not a native binary. Compiling `JConvMain.sleela` with `sleelvac` fails with a syntax error at line 99 (an inline `<` comment), so no artifact was produced.
 - `lib/decompiler`, `lib/vm`, `sleela-scripting`, `codecs`, `churn`, `compression`, `crypto`, `http-1.0`, `ui`, `user-interface`: ran without producing a Linux executable (libraries, data, or Java build output only).
 - Not attempted: Windows and macOS targets, and modules whose Makefile has no plain `all` target.
+
+## Second sweep (every other module with a Makefile)
+
+A second pass ran each remaining Makefile's default target (118 directories, skipping `install`, `jetbrains`, `build/macos`, `build/windows` and `lib/ballum`, whose default targets install to system paths or are not Linux builds). Every Linux ELF executable and shared library it produced was copied here, grouped in a folder named after its module, with test and smoke programs under `selftests/`. Only compiled binaries are in this folder; no source files.
+
+Notable additions: `sleelac` (`compiler/`), `sleela-decompiler` and the `slecompiler-api-*` tools (`decompiler/`), `javaconv` (`sleelactl/`, the Java converter), `slvm-01` and `slvm-02` (`sleela-virtual-machine/`), `sleela-sql`, `sleela-resolver`, `ledger_tool`, `analyze` and `trading_demo` (`advantage/`), `bodi-xml-runner` (`api-sleela-2.1-bodi/`), and the `philosophy`, `bash` (model-3D, readline) and `signal-processing` examples.
+
+Several modules built without producing a binary, and some failed (for example `connector`, most `lib/connector/*`, `lib/gui`, `sommeliers`, `website-generator`, `autocad`). Their logs were not reviewed in this pass.
