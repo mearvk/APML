@@ -132,12 +132,17 @@ Definitions supplied by the owner (paraphrased):
 - The Attention Creation Principle asks whether a group can be trusted as a sane individual with respect to taxes, taxation and consumption.
 - "Economic and mode" means a person consumes 2 as a static membership, for benefit and not for cause. Economy travels, and mode heals.
 - The result is described as the birth of a public speaker.
+- "Two" is twice the gauge of a standard reticle of a standard product, usually the gauge for a citizen or a mechanic.
+- "A public speaker is born" means that a circle of economic travel usually finds its home at or near a man. A cycle is known to its kind by circle travels of benevolent theory, and to listeners.
+- The creative time-force equation equals county government as proceeds, but pays specially for announcements and for sexual-reproduction favors such as meetings with very special friends. The owner confirms that the word "sexual" is acceptable here.
 
 My reading, for the owner to confirm or correct:
 - Voltage on Time is a score for a message: its weight over time, spread across the sources that caused it, with voluntary contributions added as gains.
 - The Attention Creation Principle is a rule for treating a group as one accountable actor when accounting for consumption and tax.
 - Economy is what flows between parties, and mode is the state that restores them after the flow. This is the least certain reading.
-- "Consumes 2" and "a public speaker is born" are not defined: what the 2 counts, and what the public speaker is in the system, still need stating.
+- "Two" is now a unit: a doubled standard gauge, set per kind of user (citizen or mechanic). That is implementable as a per-role multiplier, if the base gauge is given a number.
+- The public speaker is the point where an economic circle settles at a home and becomes audible to listeners. In system terms this may be where a message stream gets a stable address and subscribers. This is my guess.
+- The equation's right-hand side reads as: proceeds equal to county government, with premium payments for announcements and for the listed favors. The terms and their units are still not given.
 
 Assessment:
 - The concrete, buildable core is the last point: a scripting language whose scripts can call into Java and SLeeLa and be called from them. This agrees with the Bodi page, where Sprung scripts express URL mappings.
@@ -145,7 +150,7 @@ Assessment:
 - Create, Alter and Destroy are three clear verbs, the same lifecycle that databases use (create, alter, drop). They are the most concrete statement of what a Sprung script does. The page should say what each verb acts on (a message, a time window, a function, a Bodi URL) and what Destroy guarantees, since it is irreversible unless messages are kept in a log.
 - Acting on "the symptom of a function" suggests Sprung reacts to observed behavior of a function, such as a failure or a delay, and then creates, alters or removes something in response. That would pair naturally with Falthruu. The owner should confirm.
 - The "tax on David" analogy and the "creative time-force equation" are not explained, and I do not know what they refer to. If there is an equation, it should be written out, with its terms defined. Until then I have left both unreinterpreted.
-- The three terms now have owner definitions, but they are still abstract. An implementer needs formulas or worked examples, for instance a numeric example of a message scoring its Voltage on Time. Each needs a one-sentence definition and an example. For instance: what is classified, what are the classes, and what does a classified message cause the system to do?
+- The terms now have owner definitions, but they are still abstract. For the public site, the sexual-reproduction wording in the equation is the owner's call; I have kept it as written. An implementer needs formulas or worked examples, for instance a numeric example of a message scoring its Voltage on Time. Each needs a one-sentence definition and an example. For instance: what is classified, what are the classes, and what does a classified message cause the system to do?
 - Open design questions for the page: the message format; how a script is bound to a Bodi URL; whether time names are wall-clock, logical or both; and how Java and SLeeLa calls cross the boundary (types, errors, security).
 - Placement in the chain: Sprung is the messaging layer under Bodi's addressable parts, and Falthruu and Runyn can use the time-named message log as their evidence of what changed and when.
 

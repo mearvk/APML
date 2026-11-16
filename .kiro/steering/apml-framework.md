@@ -22,3 +22,6 @@ Sprung terms (owner definitions, not yet formalized; do not invent formulas):
 - Voltage on Time: an economic force over a distribution of causes plus gifters as gains.
 - Attention Creation Principle: whether a group can be trusted as a sane individual over taxes, taxation and consumption.
 - Economic and mode: a person consumes 2 as a static membership for benefit, not cause. Economy travels, mode heals.
+- "Two": twice the gauge of a standard reticle of a standard product, usually per citizen or mechanic.
+- Public speaker is born: an economic circle settles at a home near a man and becomes known to its kind and to listeners.
+- Creative time-force equation: county government as proceeds, with special payment for announcements and for sexual-reproduction favors (meetings with very special friends). The owner approves the wording.
