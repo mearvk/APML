@@ -37,25 +37,37 @@ Folder: `compiler/`
 | `slecompiler-api-library` | Slecompiler API tool for library inspection of a compiled artifact. Takes an artifact path. |
 | `slecompiler-api-slir-vm` | Runs a built-in SLIR VM sample and prints the result (`result: 42`, `steps: 4`). |
 
-### SLeeLa Virtual Machines (SLVM 1 to 11)
+### Premium SLeeLa Virtual Machines (SLVM 1 to 11)
 
-Folder: `vm/`
+These are the eleven premium VM generations from `sleela-virtual-machine/001` to `011`, the set the repository's `make premium-vms` target builds. Each `slvm-NN` is a standalone executable that links the native Core engine (`libslcore.a`) and runs a compiled `.sleela` artifact. Each generation builds on the one before. They are about 670 KB each.
 
-Each `slvm-NN` runs a compiled `.sleela` artifact (give it an artifact path; without one it reports that it is not a compiled artifact). Each generation builds on the one before, as described in its module README.
+**Run a program:**
 
-| Binary | Description |
-|--------|-------------|
-| `slvm-01` | SLVM/1, the Foundation: the base execution engine for SLeeLa programs. |
-| `slvm-02` | SLVM/2, Operator: moves toward cryptographic and VM-link evolution. |
-| `slvm-03` | SLVM/3: verified execution, stronger isolation, deterministic policy, supply-chain integrity. |
-| `slvm-04` | SLVM/4, Supervisor: builds on SLVM/3 verified execution. |
-| `slvm-05` | SLVM/5: reproducible, policy-verifiable, fault-tolerant execution after authenticated distributed execution. |
-| `slvm-06` | SLVM/6: continuously verified, migratable execution with lineage, multi-party attestation and lease revocation. |
-| `slvm-07` | SLVM/7: hardened successor to SLVM/6 with management and recovery controls. |
-| `slvm-08` | SLVM/8: supervised execution with an explicit supervisor and admission path. |
-| `slvm-09` | SLVM/9: portable, capability-controlled filesystem substrate and operating-system adapters. |
-| `slvm-10` | SLVM/10: verified storage lifecycle and execution assurance on top of SLVM/9. |
-| `slvm-11` | SLVM/11: host for custom, versioned filesystem modules above the SLVM/9 and 10 storage contracts. |
+```sh
+sleelvac compile -o hello.art hello.sleela     # make an artifact
+./slvm-04 hello.art                             # run it on the Supervisor VM
+./slvm-04 --selfcheck                           # run the VM's own self-check
+```
+
+`sleelvac` needs `SLEELA_HOME` set to a SLeeLa checkout when run outside the repository, and the integrity-manifest note under "Provenance and caveats" applies to it. The `slvm-NN` binaries themselves take an artifact path. They print `not a compiled .sleela artifact` for anything else, including `--help`. The repository's `sleela vm run premium <n> <program>` command is different: it rebuilds the VM from source in a checkout and does not use these files.
+
+**Checked:** all eleven were rebuilt from source with the `premium-vms` flow and came out byte-identical to the files here. All eleven `--selfcheck` runs pass. A hello-world artifact ran correctly on `slvm-01`, `slvm-04`, `slvm-08` and `slvm-11`. The other seven were self-checked but not given a program. Every generation also reports the `intXXX`/`uintXXX` fixed-width number series (`int32` to `int16777216`, `uint32` to `uint16777216`).
+
+| Binary | Codename | What the generation adds (from its self-check) |
+|--------|----------|-----------------------------------------------|
+| `slvm-01` | Foundation | Dedicated VM foundation: broker, capabilities, security supervisor and OS boundary. |
+| `slvm-02` | Operator | Cryptographic and VM-link evolution over the Foundation. |
+| `slvm-03` | Specialist | Verified execution: isolation, deterministic policy and supply-chain integrity. |
+| `slvm-04` | Supervisor | Authenticated and distributed execution. |
+| `slvm-05` | Manager | Reproducible, policy-verifiable, fault-tolerant execution. |
+| `slvm-06` | Director | Continuously verified, migratable execution: lineage, attestation and leases. |
+| `slvm-07` | Administrator | Hardened management and recovery: logging, health, checkpoints and resources. |
+| `slvm-08` | Executive | Supervised execution: admission, leases, transactions and audit. |
+| `slvm-09` | Authority | Portable, capability-controlled filesystem substrate with OS adapters. |
+| `slvm-10` | Principal | Verified storage execution and an execution-assurance layer. |
+| `slvm-11` | Sovereign | Filesystem-module host above the SLVM/9 and SLVM/10 storage contracts. |
+
+Source documentation for each generation is in its `sleela-virtual-machine/0NN/README.md`. The catalogue of generations is `sleela-virtual-machine/SLVmPremiumRegistry.sleela`.
 
 ### Anti-virus (Sleelvarin)
 
