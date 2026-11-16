@@ -2,9 +2,10 @@
 
 Status: partial. Based on text supplied by the site owner: the APML and Bloq
 material, the Bodi "Technological Overview", and three headed sections
-("Design Goals", "ROI Considerations", "Progress Inventory"), and the Sprung
-page (page 4). The Runyn page and page 5 have not been supplied and are
-marked PENDING. Nothing here is inferred from those pages.
+("Design Goals", "ROI Considerations", "Progress Inventory"), the Sprung
+page (page 4) and the Runyn page (page 5, in the owner's numbering). The
+URL list had six entries; no separate text has been received for a sixth
+page. Nothing here is inferred from pages not supplied.
 
 Two things below are my interpretation, not the owner's statements:
 the cordial assigned to each page, and the reading of the pages as a bridge.
@@ -49,7 +50,7 @@ operation:
 | 2 | Bloq | Cognitive to producial | The tool. Reads APML and emits Java source. |
 | 3 | Bodi | Producial | The runtime. Gives every part of a running system an address and lets it be patched. |
 | 4 | Sprung (page text describes Falthruu) | Producial, over time | Propagates a late design change across the system and prior commits. See 3.4 for the naming question. |
-| 5 | Runyn | PENDING | Page not supplied. |
+| 5 | Runyn | Producial, review stage | Folds a sprawling code base back into clean APML and Java source for architectural review. Closes the loop to APML. |
 
 On "College and Books": APML reads as the book (the written, formal
 description), and Bloq and Bodi as the college (the practice that turns that
@@ -135,7 +136,19 @@ Assessment:
 
 ### 3.5 Runyn
 
-PENDING. No content supplied.
+Cordial (my inference): Structural Integrity as Design.
+
+Claims, in the owner's text:
+- Even with Bloq, APML and Bodi, software sprawl can occur. Structure that looked right early can later force an unexpected and costly redesign.
+- Runyn reduces that risk by "refolding" the software during the development cycle into clean, correct APML and Java source.
+- The result shows whether the software is heading in the right direction, and is ready for architectural review.
+
+Assessment:
+- Runyn is the reverse direction of Bloq. Bloq goes APML to Java. Runyn goes Java (and sprawl) back to APML. Together they form a round trip, which answers the question raised in 3.2 about what happens to hand edits: they can be folded back into the description.
+- That makes Runyn the piece that keeps APML true over the life of a project, and the most valuable part of the chain if it works.
+- "Clean", "correct" and "right direction" need definitions. Useful ones: the refolded APML regenerates source that behaves the same; the report lists structural drift against the original APML (new dependencies, cycles, oversized classes); a pass or fail result for architectural review.
+- The cost argument ("embarrassment of redesign costs, in time and money") is the best ROI sentence on the site. It belongs under "ROI Considerations", where the repeated Bodi text now sits.
+- Below the Runyn paragraph the page repeats the Bodi text again, as on the other pages.
 
 ### 3.6 Bodi copies: Design Goals, ROI Considerations, Progress Inventory
 
@@ -171,15 +184,35 @@ description should drive design, build and operation.
 1. Show a small APML sample and the Bloq output next to it.
 2. State what "correct" means for Bloq output, and how regeneration treats hand edits.
 3. Document Bodi's trust model for URL remapping.
-4. Supply the Runyn page and page 5, and confirm whether Sprung is a scripting language, Falthruu is its product name, or both are separate technologies.
+4. Confirm whether Sprung is a scripting language, Falthruu is its product name, or both are separate technologies.
 4a. Replace the duplicated Bodi text under Design Goals, ROI Considerations and Progress Inventory with content specific to each heading.
 5. Fix small text issues: "software herself", "very usually", "notion of excellent software in Day" (unclear, possibly a typo), "its its".
 6. Pick the one agency name for each product (APML, Bloq, Bodi, Sprung, Runyn) and use it consistently in folder names under `agencies/`.
+
+## 5a. URL slugs
+
+Assuming the owner's numbering follows the order of the URL list, the
+slugs map as follows:
+
+| # | Slug | Content received |
+|---|------|------------------|
+| 1 | `copy-of-bodi-technology` | APML |
+| 2 | `bloq-technology` | Bloq |
+| 3 | `bodi-technology` | Bodi |
+| 4 | `sprung-technology` | Sprung page (Falthruu text) |
+| 5 | `copy-of-bodi-technology-1` | Runyn |
+| 6 | `copy-of-runyn-technology` | No text received; likely a copy of the Runyn page |
+
+Slugs 1 and 5 begin with `copy-of-bodi`, but their content is not Bodi.
+This fits why every page ends with the same Bodi text: pages were made by
+duplicating Bodi and only the opening paragraph was rewritten. The slugs
+should be replaced with names that match the content when the site moves
+to JSP (`apml`, `bloq`, `bodi`, `sprung`, `runyn`).
 
 ## 6. Link to the doctrine
 
 This analysis supports a refinement of `docs/DOCTRINE.md`: the doctrine
 should be "structure first, one description from design through
 operation", with each technology owning one stage. The agencies table in
-that file can now be started with APML, Bloq and Bodi. Sprung and Runyn
-stay as TBD.
+that file can now be started with APML, Bloq, Bodi, Sprung (Falthruu) and
+Runyn, with the naming question in 3.4 still open.
