@@ -1,0 +1,160 @@
+#sleela 3.1
+<< PermutationProbe: tests the commutation law by running acts in every order
+   and comparing results.
+
+   pairs: every pair of wants, on the same target and on different targets,
+   is run in both orders. The result must match the prediction of
+   CommutationMatrix in every case.
+
+   permutations: a set of four acts is run in all 24 orders and the distinct
+   results are counted. A design is permutable when it gives one result. >>
+class PermutationProbe {
+  ArtifactStore store = new ArtifactStore();
+  CommutationMatrix law = new CommutationMatrix();
+  int cases = 0;
+  int agree = 0;
+  int[] w = new int[4];
+  int[] t = new int[4];
+  int[] v = new int[4];
+
+  int runPair(int wa, int ta, int va, int wb, int tb, int vb) {
+    store.reset();
+    store.apply(wa, ta, va, "probe", "law test");
+    store.apply(wb, tb, vb, "probe", "law test");
+    return store.signature();
+  }
+
+  < Returns the number of disagreements; zero means the law held everywhere. >
+  int pairs() {
+    cases = 0;
+    agree = 0;
+    int a = 1;
+    while (a <= 12) {
+      int b = 1;
+      while (b <= 12) {
+        int same = 0;
+        while (same < 2) {
+          int tb = 1;
+          if (same == 0) { tb = 2; }
+          int ab = runPair(a, 1, 5, b, tb, 7);
+          int ba = runPair(b, tb, 7, a, 1, 5);
+          boolean actual = ab == ba;
+          if (actual == law.commute(a, 1, b, tb)) { agree = agree + 1; }
+          cases = cases + 1;
+          same = same + 1;
+        }
+        b = b + 1;
+      }
+      a = a + 1;
+    }
+    return cases - agree;
+  }
+
+  void setActs(int i, int want, int target, int value) {
+    w[i] = want;
+    t[i] = target;
+    v[i] = value;
+  }
+
+  int runOrder(int a, int b, int c, int d) {
+    store.reset();
+    store.apply(w[a], t[a], v[a], "probe", "permutation");
+    store.apply(w[b], t[b], v[b], "probe", "permutation");
+    store.apply(w[c], t[c], v[c], "probe", "permutation");
+    store.apply(w[d], t[d], v[d], "probe", "permutation");
+    return store.signature();
+  }
+
+  < Count distinct results over all 24 orders of the four acts. >
+  int distinctResults() {
+    int[] seen = new int[24];
+    int n = 0;
+    int a = 0;
+    while (a < 4) {
+      int b = 0;
+      while (b < 4) {
+        int c = 0;
+        while (c < 4) {
+          int d = 0;
+          while (d < 4) {
+            boolean distinct = true;
+            if (a == b) { distinct = false; }
+            if (a == c) { distinct = false; }
+            if (a == d) { distinct = false; }
+            if (b == c) { distinct = false; }
+            if (b == d) { distinct = false; }
+            if (c == d) { distinct = false; }
+            if (distinct) {
+              int s = runOrder(a, b, c, d);
+              boolean found = false;
+              int k = 0;
+              while (k < n) {
+                if (seen[k] == s) { found = true; }
+                k = k + 1;
+              }
+              if (found == false) { seen[n] = s; n = n + 1; }
+            }
+            d = d + 1;
+          }
+          c = c + 1;
+        }
+        b = b + 1;
+      }
+      a = a + 1;
+    }
+    return n;
+  }
+
+  < True if every pair of the four acts commutes according to the law. >
+  boolean predictedPermutable() {
+    int i = 0;
+    while (i < 4) {
+      int j = i + 1;
+      while (j < 4) {
+        if (law.commute(w[i], t[i], w[j], t[j]) == false) { return false; }
+        j = j + 1;
+      }
+      i = i + 1;
+    }
+    return true;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 307;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

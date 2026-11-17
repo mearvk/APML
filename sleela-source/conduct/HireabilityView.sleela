@@ -1,0 +1,128 @@
+#sleela 3.1
+<< HireabilityView: what the conduct record shows about a contributor, for a
+   person who is deciding whether to hire or promote them.
+
+   Guards:
+   - It reads only the ConductLedger. It has no input for age, sex, origin,
+     health, belief or any other personal trait, and evidence returns -1 for
+     any field it does not recognise.
+   - It reports evidence and an advisory grade. It does not rank people
+     against each other and does not decide.
+   - Refused attempts are shown beside accepted acts, so a reader sees both.
+
+   Advisory grades, using the Grade 3 and Grade 4 terms from the Senior View:
+     Grade 3 evidence  at least 3 accepted accounted acts and no refusal for a
+                       missing actor or reason in the last 10 acts
+     Grade 4 evidence  Grade 3, plus at least one consented exchange and one
+                       recorded demise >>
+class HireabilityView {
+  ConductLedger ledger = null;
+  WantsAlphabet wants = new WantsAlphabet();
+
+  void attach(ConductLedger l) { ledger = l; }
+
+  int accountedAccepted(String a) {
+    int n = 0;
+    int i = 0;
+    while (i < ledger.count()) {
+      if (ledger.actorAt(i) == a) {
+        if (ledger.acceptedAt(i)) {
+          if (wants.needsAccount(ledger.wantAt(i))) { n = n + 1; }
+        }
+      }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  int recentGuardRefusals(String a) {
+    int n = 0;
+    int seen = 0;
+    int i = ledger.count() - 1;
+    while (i >= 0) {
+      if (seen >= 10) { return n; }
+      if (ledger.actorAt(i) == a) {
+        seen = seen + 1;
+        if (ledger.acceptedAt(i) == false) {
+          if (ledger.reasonAt(i) == "") { n = n + 1; }
+        }
+      }
+      i = i - 1;
+    }
+    return n;
+  }
+
+  < Allowlisted evidence fields only. Anything else returns -1. >
+  int evidence(String a, String field) {
+    if (field == "accepted acts") { return ledger.countActor(a, true); }
+    if (field == "refused attempts") { return ledger.countActor(a, false); }
+    if (field == "accounted acts") { return accountedAccepted(a); }
+    if (field == "consented exchanges") { return ledger.countBy(a, 10, true); }
+    if (field == "recorded demises") { return ledger.countBy(a, 12, true); }
+    if (field == "reasoned declines") { return ledger.countBy(a, 11, true); }
+    if (field == "recent guard refusals") { return recentGuardRefusals(a); }
+    return -1;
+  }
+
+  String grade(String a) {
+    boolean g3 = false;
+    if (evidence(a, "accounted acts") >= 3) {
+      if (evidence(a, "recent guard refusals") == 0) { g3 = true; }
+    }
+    if (g3 == false) { return "not yet Grade 3 evidence"; }
+    if (evidence(a, "consented exchanges") >= 1) {
+      if (evidence(a, "recorded demises") >= 1) { return "Grade 4 evidence"; }
+    }
+    return "Grade 3 evidence";
+  }
+
+  void printFor(String a) {
+    print("conduct evidence for " + a + " (advisory; a person decides):");
+    String[] f = { "accepted acts", "refused attempts", "accounted acts", "consented exchanges", "reasoned declines", "recorded demises", "recent guard refusals" };
+    int i = 0;
+    while (i < 7) {
+      print("  " + f[i] + ": " + evidence(a, f[i]));
+      i = i + 1;
+    }
+    print("  advisory: " + grade(a));
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 306;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

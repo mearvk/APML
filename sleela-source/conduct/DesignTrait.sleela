@@ -1,0 +1,109 @@
+#sleela 3.1
+<< DesignTrait: a reusable capability of a design artifact, in the object
+   design sense of a trait. Demise is a property of the trait: the tick it
+   ended, who ended it, why, and what replaces it. A trait is active,
+   deprecated, or demised. Demise needs an actor, a reason and a successor (or
+   the word none); afterwards the trait refuses every write, but its whole
+   record stays readable. Demise here applies to design traits only. >>
+class DesignTrait {
+  String name = "";
+  int state = 0;
+  int value = 0;
+  int bornTick = 0;
+  int demiseTick = -1;
+  String demiseActor = "";
+  String demiseReason = "";
+  String successor = "";
+
+  void born(String n, int tick, int v) {
+    name = n;
+    bornTick = tick;
+    value = v;
+    state = 0;
+  }
+
+  boolean isDemised() {
+    if (state == 2) { return true; }
+    return false;
+  }
+
+  String stateName() {
+    String[] a = { "active", "deprecated", "demised" };
+    return a[state];
+  }
+
+  boolean deprecate() {
+    if (state != 0) { return false; }
+    state = 1;
+    return true;
+  }
+
+  boolean setValue(int v) {
+    if (isDemised()) { return false; }
+    value = v;
+    return true;
+  }
+
+  boolean addValue(int v) {
+    if (isDemised()) { return false; }
+    value = value + v;
+    return true;
+  }
+
+  boolean demise(int tick, String actor, String why, String nextName) {
+    if (isDemised()) { return true; }
+    if (actor == "") { return false; }
+    if (why == "") { return false; }
+    if (nextName == "") { return false; }
+    state = 2;
+    demiseTick = tick;
+    demiseActor = actor;
+    demiseReason = why;
+    successor = nextName;
+    return true;
+  }
+
+  int lifetime() {
+    if (demiseTick < 0) { return -1; }
+    return demiseTick - bornTick;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 305;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

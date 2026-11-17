@@ -1,0 +1,44 @@
+#sleela 3.1
+<< ProsaicAlphabet: the everyday words of the system. Symbols 1 to 14 are
+   leading causes: the refusal reasons of the circuit (1 to 10) and the Runyn
+   findings (11 to 14). Symbols 15 to 20 are carry-cases: what an act or a file
+   carries with it so that others can trust it later. >>
+class ProsaicAlphabet extends ConductAlphabet {
+  String title() { return "prosaic alphabet (leading causes and carry-cases)"; }
+  int size() { return 20; }
+
+  String symbol(int c) {
+    String[] a = { "none", "out of scope", "malformed", "missing header", "too many lines", "too wide", "missing metadata", "generated without mark", "duplicate content", "buffer full", "binary content", "long", "wide", "many imports", "many members", "header", "metadata", "generated mark", "actor", "reason", "correlation id" };
+    if (valid(c) == false) { return "none"; }
+    return a[c];
+  }
+
+  boolean isCause(int c) {
+    if (c < 1) { return false; }
+    if (c > 14) { return false; }
+    return true;
+  }
+
+  boolean isCarryCase(int c) {
+    if (c < 15) { return false; }
+    if (c > 20) { return false; }
+    return true;
+  }
+
+  String meaning(int c) {
+    if (isCause(c)) {
+      if (c <= 10) { return "leading cause: refusal reason in the circuit"; }
+      return "leading cause: Runyn finding after consideration";
+    }
+    if (isCarryCase(c)) { return "carry-case: travels with the act or file"; }
+    return "none";
+  }
+
+  < Carry-cases as bits, so an act can carry several. Bit for symbol c is 2 to the power c - 15. >
+  int bit(int c) {
+    int b = 1;
+    int i = 15;
+    while (i < c) { b = b * 2; i = i + 1; }
+    return b;
+  }
+}

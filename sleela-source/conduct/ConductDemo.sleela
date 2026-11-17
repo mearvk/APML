@@ -1,0 +1,240 @@
+#sleela 3.1
+<< ConductDemo: runs the conduct design end to end and checks it.
+     sleela compile circuit/*.sleela medium/MediumProfile.sleela professional/ProfessionalProfile.sleela professional/ProCircuit.sleela conduct/*.sleela -o build/conduct.sleela
+     sleela run build/conduct.sleela >>
+class ConductDemo {
+  int failures = 0;
+  int passes = 0;
+  ConductLedger ledger = new ConductLedger();
+  ArtifactStore store = new ArtifactStore();
+  WantsAlphabet wants = new WantsAlphabet();
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  < One act: guard, apply, then write it down whether or not it took effect. >
+  boolean act(String who, String why, int w, int target, int amount, int theme, int cause, int carry) {
+    boolean ok = true;
+    if (wants.needsAccount(w)) {
+      if (who == "") { ok = false; }
+      if (why == "") { ok = false; }
+    }
+    if (ok) { ok = store.apply(w, target, amount, who, why); }
+    ledger.append(who, why, w, target, amount, theme, cause, carry, ok);
+    return ok;
+  }
+
+  void alphabets() {
+    print("== alphabets");
+    MoralAlphabet m = new MoralAlphabet();
+    ProsaicAlphabet p = new ProsaicAlphabet();
+    WantsAlphabet w = new WantsAlphabet();
+    m.printAll();
+    p.printAll();
+    w.printAll();
+    int c = 1;
+    int backed = 0;
+    while (c <= m.size()) {
+      if (m.guaranteedBy(c) != "none") { backed = backed + 1; }
+      c = c + 1;
+    }
+    expect(backed == m.size(), "every moral-medium theme names the check that guarantees it");
+    expect(m.valid(0) == false, "code 0 is never a symbol");
+    expect(p.isCause(4), "too many lines is a leading cause");
+    expect(p.isCarryCase(18), "actor is a carry-case");
+  }
+
+  void permutability() {
+    print("== permutability");
+    CommutationMatrix law = new CommutationMatrix();
+    law.printTable();
+    PermutationProbe probe = new PermutationProbe();
+    int bad = probe.pairs();
+    print("  pair cases run: " + probe.cases + ", agreeing with the law: " + probe.agree);
+    expect(bad == 0, "the commutation law predicts every pair in both orders");
+    probe.setActs(0, 6, 1, 3);
+    probe.setActs(1, 6, 1, 4);
+    probe.setActs(2, 5, 2, 9);
+    probe.setActs(3, 3, 3, 0);
+    int r1 = probe.distinctResults();
+    print("  two adds on one trait, an alter on another, trivia: " + r1 + " distinct result(s) over 24 orders");
+    expect(probe.predictedPermutable(), "law predicts that design is permutable");
+    expect(r1 == 1, "all 24 orders give one result");
+    probe.setActs(0, 6, 1, 3);
+    probe.setActs(1, 5, 1, 4);
+    probe.setActs(2, 12, 1, 0);
+    probe.setActs(3, 2, 2, 0);
+    int r2 = probe.distinctResults();
+    print("  add, alter and demise on one trait, a query: " + r2 + " distinct results over 24 orders");
+    expect(probe.predictedPermutable() == false, "law predicts that design is not permutable");
+    expect(r2 > 1, "orders give different results");
+  }
+
+  void solubility() {
+    print("== solubility");
+    SolubilityMatrix s = new SolubilityMatrix();
+    s.printMatrix();
+    print("  rank of A: " + s.rankA() + " (rows approvals and accounted are equal)");
+    int[] b1 = { 10, 4, 24, 4 };
+    boolean real1 = s.realSoluble(b1);
+    boolean whole1 = s.wholeSoluble(b1);
+    print("  target records 10, approvals 4, value 24, accounted 4: " + s.solutionText());
+    expect(real1, "target 1 is soluble over the reals");
+    expect(whole1, "target 1 has a whole, non-negative solution");
+    int[] b2 = { 10, 4, 24, 3 };
+    expect(s.realSoluble(b2) == false, "approvals 4 with accounted 3 is insoluble: an approved act is always accounted");
+    int[] b3 = { 3, 4, 20, 4 };
+    expect(s.wholeSoluble(b3) == false, "4 approvals from 3 records is insoluble: no effect without a record");
+  }
+
+  void demise() {
+    print("== demise as a property of a trait");
+    store.reset();
+    expect(act("B. Chen", "", 12, 3, 0, 8, 0, 8) == false, "demise without a reason is refused");
+    expect(store.at(3).isDemised() == false, "the trait is still active");
+    expect(act("A. Rivera", "replaced by coalesced batches", 12, 3, 0, 8, 0, 24), "demise with actor and reason is accepted");
+    DesignTrait d = store.at(3);
+    print("  trait " + d.name + ": " + d.stateName() + " at tick " + d.demiseTick + " by " + d.demiseActor + ", reason: " + d.demiseReason + ", successor: " + d.successor + ", lifetime " + d.lifetime() + " ticks");
+    expect(act("B. Chen", "late fix", 5, 3, 99, 3, 0, 24) == false, "a write after demise is refused");
+    expect(d.value == 30, "the demised trait keeps its last value");
+    int w = ledger.count();
+    expect(w == 3, "all three attempts are in the ledger, refused ones included");
+  }
+
+  void hireability() {
+    print("== hireability (conduct evidence only)");
+    act("A. Rivera", "pin schema", 5, 1, 12, 1, 0, 24);
+    act("A. Rivera", "agreed total", 10, 2, 5, 2, 0, 56);
+    act("A. Rivera", "duplicate work", 11, 2, 0, 4, 8, 24);
+    act("B. Chen", "", 5, 1, 13, 1, 0, 8);
+    act("B. Chen", "status", 3, 1, 0, 0, 0, 0);
+    act("B. Chen", "lines too long", 6, 2, 1, 4, 11, 24);
+    HireabilityView h = new HireabilityView();
+    h.attach(ledger);
+    h.printFor("A. Rivera");
+    h.printFor("B. Chen");
+    expect(h.grade("A. Rivera") == "Grade 4 evidence", "A. Rivera shows Grade 4 evidence");
+    expect(h.grade("B. Chen") == "not yet Grade 3 evidence", "B. Chen shows a recent refusal for a missing reason");
+    expect(h.evidence("B. Chen", "age") == -1, "a personal trait is not an evidence field");
+  }
+
+  void profit() {
+    print("== profit from the circuits");
+    ProfitModel pm = new ProfitModel();
+    pm.printPrices();
+    MediumProfile mp = new MediumProfile();
+    CircuitProfile p = mp.build();
+    ApprovalGate g = new ApprovalGate();
+    g.configure(p.approvalsPerSecond, p.approvalBatch, p.tickMs);
+    Circuit c = new Circuit();
+    c.setup(p, g, new DedupeSet(), new SerialSource());
+    int serial = 0;
+    int acc = 0;
+    int t = 0;
+    while (t < p.ticks) {
+      g.tick();
+      acc = acc + p.filesPerSecond * p.tickMs;
+      while (acc >= 1000) { acc = acc - 1000; serial = serial + 1; c.inject(serial * 10); }
+      c.step();
+      t = t + 1;
+    }
+    CircuitReport rm = new CircuitReport();
+    rm.add(c);
+    pm.evaluate(rm, g);
+    int medium = pm.perSecond(rm);
+    print("  medium: value " + pm.value + ", cost " + pm.cost + ", profit " + pm.profit() + " (" + medium + " per second)");
+    ProfessionalProfile pp = new ProfessionalProfile();
+    CircuitProfile q = pp.build();
+    ProCircuit pc = new ProCircuit();
+    pc.setup(q);
+    serial = 0;
+    acc = 0;
+    t = 0;
+    while (t < q.ticks) {
+      acc = acc + q.filesPerSecond * q.tickMs;
+      while (acc >= 1000) { acc = acc - 1000; serial = serial + 1; pc.inject(serial); }
+      pc.step(t);
+      t = t + 1;
+    }
+    CircuitReport rp = new CircuitReport();
+    int i = 1;
+    while (i <= 8) { rp.add(pc.lane(i)); i = i + 1; }
+    pm.evaluate(rp, pc.gate);
+    int pro = pm.perSecond(rp);
+    print("  professional: value " + pm.value + ", cost " + pm.cost + ", profit " + pm.profit() + " (" + pro + " per second)");
+    expect(pro > medium, "professional earns more per second under these prices");
+  }
+
+  < Ample and support parts, read from their signals, and the design loop between them. >
+  void ampleAndSupport() {
+    print("== ample and support parts, from signal amplitude");
+    MediumProfile mp = new MediumProfile();
+    CircuitProfile base = mp.build();
+    ConductRun before = new ConductRun();
+    before.run(base);
+    AmplitudeAnalyzer a = before.signal;
+    a.printAll();
+    int ample = 0;
+    int support = 0;
+    int n = 1;
+    while (n <= 6) {
+      if (a.partRole(n) == "ample") { ample = ample + 1; }
+      if (a.partRole(n) == "support") { support = support + 1; }
+      n = n + 1;
+    }
+    expect(ample > 0, "the design has ample parts");
+    expect(support > 0, "the design has support parts");
+    expect(ample + support == 6, "every part is ample or support; none is idle");
+    DesignFeedback f = new DesignFeedback();
+    int k = f.propose(a);
+    print("  feedback: " + k + " proposal(s) from ample, saturated parts");
+    expect(k > 0, "an ample part at its limit leads to a design proposal");
+    n = 1;
+    boolean supportUntouched = true;
+    while (n <= 6) {
+      if (a.partRole(n) != "ample") {
+        if (f.isProposed(n)) { supportUntouched = false; }
+      }
+      n = n + 1;
+    }
+    expect(supportUntouched, "no support part is enlarged");
+    CircuitProfile revised = f.apply(base);
+    ConductRun after = new ConductRun();
+    after.run(revised);
+    n = 1;
+    while (n <= 6) {
+      if (f.isProposed(n)) {
+        PartSignal ps = a.part(n);
+        AmplitudeAnalyzer a2 = after.signal;
+        print("  " + ps.name + ": capacity " + base.capacityOf(n) + " -> " + revised.capacityOf(n) + ", avg wait " + before.avgWaitMs(n) + " ms -> " + after.avgWaitMs(n) + " ms, trait " + a.designTrait(n) + " -> " + a2.designTrait(n));
+      }
+      n = n + 1;
+    }
+    ProfitModel pb0 = before.profit;
+    ProfitModel pa0 = after.profit;
+    int g = f.gain(pb0.profit(), pa0.profit());
+    ProfitModel pb = before.profit;
+    ProfitModel pa = after.profit;
+    print("  profit " + pb.profit() + " -> " + pa.profit() + ", less " + (k * f.costPerUnit) + " for capacity: gain " + g);
+    boolean taken = g > 0;
+    Tranchion tr = new Tranchion();
+    tr.write(a, f, g, taken);
+    Circuit ac = after.circuit;
+    expect(ac.conserved(), "the redesigned circuit still conserves every file");
+  }
+
+  void main() {
+    print("Conduct design: alphabets, permutability, solubility, demise, hireability, profit, ample and support");
+    alphabets();
+    permutability();
+    solubility();
+    demise();
+    hireability();
+    profit();
+    ampleAndSupport();
+    if (failures == 0) { print("conduct: all " + passes + " checks passed"); }
+    else { print("conduct: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}

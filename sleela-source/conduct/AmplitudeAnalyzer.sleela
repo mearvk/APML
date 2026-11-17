@@ -1,0 +1,157 @@
+#sleela 3.1
+<< AmplitudeAnalyzer: recognises the role and trait of each of the six parts
+   from its signal, the way a recogniser reads a character from its strokes.
+
+   Role:
+     ample     carries the main current: utilization of at least 50 percent
+     support   carries little current, but at least one ample part receives
+               current through it, so removing it would cut that path; the
+               stanchion of the design
+     idle      carries little current and no ample part depends on it
+
+   Trait, from amplitude:
+     saturated at capacity in at least 20 percent of ticks
+     bursty    crest of at least 300 (peak at least three times the mean)
+     idle      mean under 5 percent of capacity
+     steady    none of the above
+
+   Paths come from the circuit edges: APML to Bloq, Bloq to Bodi, Bodi to
+   Sprung, Runyn to Sprung, Runyn to Falthruu, Falthruu to APML. >>
+class AmplitudeAnalyzer {
+  PartSignal p1 = new PartSignal();
+  PartSignal p2 = new PartSignal();
+  PartSignal p3 = new PartSignal();
+  PartSignal p4 = new PartSignal();
+  PartSignal p5 = new PartSignal();
+  PartSignal p6 = new PartSignal();
+  int[] edges = { 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 1, 0, 0, 0, 0, 0,  0, 0, 0, 1, 0, 0, 0, 0,  0, 0, 0, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 1, 0, 1, 0,  0, 1, 0, 0, 0, 0, 0, 0 };
+
+  void setup(Circuit c) {
+    int n = 1;
+    while (n <= 6) {
+      CircuitNode x = c.node(n);
+      PartSignal s = part(n);
+      s.setup(x.name, x.capacity);
+      n = n + 1;
+    }
+  }
+
+  PartSignal part(int n) {
+    if (n == 1) { return p1; }
+    if (n == 2) { return p2; }
+    if (n == 3) { return p3; }
+    if (n == 4) { return p4; }
+    if (n == 5) { return p5; }
+    return p6;
+  }
+
+  void sample(Circuit c) {
+    int n = 1;
+    while (n <= 6) {
+      CircuitNode x = c.node(n);
+      PartSignal s = part(n);
+      s.sample(x.taken);
+      n = n + 1;
+    }
+  }
+
+  boolean edge(int a, int b) {
+    if (edges[a * 8 + b] == 1) { return true; }
+    return false;
+  }
+
+  boolean isAmple(int n) {
+    PartSignal s = part(n);
+    if (s.utilization() >= 50) { return true; }
+    return false;
+  }
+
+  < True if an ample part can be reached from n along circuit edges. >
+  boolean feedsAmple(int n) {
+    int[] seen = new int[8];
+    int[] stack = new int[16];
+    int top = 0;
+    stack[0] = n;
+    top = 1;
+    seen[n] = 1;
+    while (top > 0) {
+      top = top - 1;
+      int at = stack[top];
+      int b = 1;
+      while (b <= 6) {
+        if (edge(at, b)) {
+          if (seen[b] == 0) {
+            if (isAmple(b)) { return true; }
+            seen[b] = 1;
+            stack[top] = b;
+            top = top + 1;
+          }
+        }
+        b = b + 1;
+      }
+    }
+    return false;
+  }
+
+  String partRole(int n) {
+    if (isAmple(n)) { return "ample"; }
+    if (feedsAmple(n)) { return "support"; }
+    return "idle";
+  }
+
+  String designTrait(int n) {
+    PartSignal s = part(n);
+    if (s.saturatedPercent() >= 20) { return "saturated"; }
+    if (s.utilization() < 5) { return "idle"; }
+    if (s.crest() >= 300) { return "bursty"; }
+    return "steady";
+  }
+
+  void printAll() {
+    int n = 1;
+    while (n <= 6) {
+      PartSignal s = part(n);
+      print("  " + n + " " + s.name + ": mean " + s.mean100() + "/100 files per tick, peak " + s.peak + ", crest " + s.crest() + ", utilization " + s.utilization() + "%, at capacity " + s.saturatedPercent() + "% of ticks -> " + partRole(n) + ", " + designTrait(n));
+      n = n + 1;
+    }
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 321;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

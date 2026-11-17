@@ -1,0 +1,124 @@
+#sleela 3.1
+<< ConductLedger: the append-only record of conduct. One entry is one act,
+   written as a word over the three alphabets: who acted, which want, on which
+   target, with what amount, under which theme, for which leading cause, and
+   with which carry-cases. Refused acts are written too, with accepted false,
+   because an attempt is conduct. There is no method that edits or removes an
+   entry. >>
+class ConductLedger {
+  int cap = 512;
+  int size = 0;
+  String[] actor = new String[512];
+  String[] reason = new String[512];
+  int[] want = new int[512];
+  int[] target = new int[512];
+  int[] amount = new int[512];
+  int[] theme = new int[512];
+  int[] cause = new int[512];
+  int[] carry = new int[512];
+  boolean[] accepted = new boolean[512];
+
+  int append(String a, String r, int w, int t, int amt, int th, int cs, int cr, boolean ok) {
+    if (size >= cap) { return -1; }
+    int i = size;
+    actor[i] = a;
+    reason[i] = r;
+    want[i] = w;
+    target[i] = t;
+    amount[i] = amt;
+    theme[i] = th;
+    cause[i] = cs;
+    carry[i] = cr;
+    accepted[i] = ok;
+    size = size + 1;
+    return i;
+  }
+
+  int count() { return size; }
+  String actorAt(int i) { return actor[i]; }
+  String reasonAt(int i) { return reason[i]; }
+  int wantAt(int i) { return want[i]; }
+  int themeAt(int i) { return theme[i]; }
+  int causeAt(int i) { return cause[i]; }
+  int carryAt(int i) { return carry[i]; }
+  boolean acceptedAt(int i) { return accepted[i]; }
+
+  int countBy(String a, int w, boolean ok) {
+    int n = 0;
+    int i = 0;
+    while (i < size) {
+      if (actor[i] == a) {
+        if (want[i] == w) {
+          if (accepted[i] == ok) { n = n + 1; }
+        }
+      }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  int countActor(String a, boolean ok) {
+    int n = 0;
+    int i = 0;
+    while (i < size) {
+      if (actor[i] == a) {
+        if (accepted[i] == ok) { n = n + 1; }
+      }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  int countTheme(String a, int th) {
+    int n = 0;
+    int i = 0;
+    while (i < size) {
+      if (actor[i] == a) {
+        if (theme[i] == th) {
+          if (accepted[i]) { n = n + 1; }
+        }
+      }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 304;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

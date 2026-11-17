@@ -1,0 +1,220 @@
+#sleela 3.1
+<< SolubilityMatrix: the conduct matrix A. Each column is a kind of act and
+   each row a quantity that acts produce. A target b is soluble when some
+   whole, non-negative number of each act produces exactly b. The test is in
+   two steps: first rank(A) = rank(A|b) by Gaussian elimination, which decides
+   whether any real solution exists; then a bounded search for a whole,
+   non-negative one. Columns: query, notice, alter, ack, demise. Rows:
+
+     records    every act writes one entry       1  1  1  1  1
+     approvals  acts a person must approve       0  0  1  1  1
+     value      units of value, demise costs 2   1  0  5  8 -2
+     accounted  acts carrying actor and reason   0  0  1  1  1
+
+   The rows are laws of the model. Rows 2 and 4 are equal, so approvals and
+   accounted acts can never differ, and no act produces a record-free effect.
+   The values in row 3 are assumptions. >>
+class SolubilityMatrix {
+  int rows = 4;
+  int cols = 5;
+  int[] a = { 1, 1, 1, 1, 1,  0, 0, 1, 1, 1,  1, 0, 5, 8, -2,  0, 0, 1, 1, 1 };
+  double[] m = new double[24];
+  int[] x = new int[5];
+  int bound = 12;
+
+  String rowName(int r) {
+    String[] n = { "records", "approvals", "value", "accounted" };
+    return n[r];
+  }
+
+  String colName(int c) {
+    String[] n = { "query", "notice", "alter", "ack", "demise" };
+    return n[c];
+  }
+
+  int entry(int r, int c) { return a[r * cols + c]; }
+
+  double absd(double d) {
+    if (d < 0.0) { return 0.0 - d; }
+    return d;
+  }
+
+  < Rank of the first w columns of the working matrix m (rows by 6 columns). >
+  int rankOf(int w) {
+    int rank = 0;
+    int col = 0;
+    while (col < w) {
+      if (rank >= rows) { return rank; }
+      int piv = -1;
+      double best = 0.000001;
+      int r = rank;
+      while (r < rows) {
+        if (absd(m[r * 6 + col]) > best) { best = absd(m[r * 6 + col]); piv = r; }
+        r = r + 1;
+      }
+      if (piv >= 0) {
+        int k = 0;
+        while (k < 6) {
+          double tmp = m[rank * 6 + k];
+          m[rank * 6 + k] = m[piv * 6 + k];
+          m[piv * 6 + k] = tmp;
+          k = k + 1;
+        }
+        int r2 = 0;
+        while (r2 < rows) {
+          if (r2 != rank) {
+            double f = m[r2 * 6 + col] / m[rank * 6 + col];
+            int k2 = 0;
+            while (k2 < 6) {
+              m[r2 * 6 + k2] = m[r2 * 6 + k2] - f * m[rank * 6 + k2];
+              k2 = k2 + 1;
+            }
+          }
+          r2 = r2 + 1;
+        }
+        rank = rank + 1;
+      }
+      col = col + 1;
+    }
+    return rank;
+  }
+
+  void load(int[] b) {
+    int r = 0;
+    while (r < rows) {
+      int c = 0;
+      while (c < cols) {
+        double e = entry(r, c);
+        m[r * 6 + c] = e;
+        c = c + 1;
+      }
+      double bv = b[r];
+      m[r * 6 + 5] = bv;
+      r = r + 1;
+    }
+  }
+
+  int rankA() {
+    int[] zero = { 0, 0, 0, 0 };
+    load(zero);
+    return rankOf(5);
+  }
+
+  boolean realSoluble(int[] b) {
+    int ra = rankA();
+    load(b);
+    int rab = rankOf(6);
+    return ra == rab;
+  }
+
+  boolean produces(int[] b) {
+    int r = 0;
+    while (r < rows) {
+      int s = 0;
+      int c = 0;
+      while (c < cols) {
+        s = s + entry(r, c) * x[c];
+        c = c + 1;
+      }
+      if (s != b[r]) { return false; }
+      r = r + 1;
+    }
+    return true;
+  }
+
+  < Search counts 0 to bound for each act. Leaves the first solution in x. >
+  boolean wholeSoluble(int[] b) {
+    int q = 0;
+    while (q <= bound) {
+      int n = 0;
+      while (n <= bound) {
+        int al = 0;
+        while (al <= bound) {
+          int ak = 0;
+          while (ak <= bound) {
+            int d = 0;
+            while (d <= bound) {
+              x[0] = q;
+              x[1] = n;
+              x[2] = al;
+              x[3] = ak;
+              x[4] = d;
+              if (produces(b)) { return true; }
+              d = d + 1;
+            }
+            ak = ak + 1;
+          }
+          al = al + 1;
+        }
+        n = n + 1;
+      }
+      q = q + 1;
+    }
+    return false;
+  }
+
+  String solutionText() {
+    String s = "";
+    int c = 0;
+    while (c < cols) {
+      s = s + colName(c) + " " + x[c];
+      if (c < cols - 1) { s = s + ", "; }
+      c = c + 1;
+    }
+    return s;
+  }
+
+  void printMatrix() {
+    print("conduct matrix A (rows are quantities, columns are acts: query notice alter ack demise):");
+    int r = 0;
+    while (r < rows) {
+      String line = "  " + rowName(r) + ":";
+      int c = 0;
+      while (c < cols) {
+        line = line + " " + entry(r, c);
+        c = c + 1;
+      }
+      print(line);
+      r = r + 1;
+    }
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 309;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

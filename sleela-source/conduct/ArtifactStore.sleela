@@ -1,0 +1,93 @@
+#sleela 3.1
+<< ArtifactStore: three design traits that acts are applied to. It turns a
+   sequence of acts into a result, and a result into one signature number, so
+   two orderings of the same acts can be compared exactly. >>
+class ArtifactStore {
+  DesignTrait t1 = new DesignTrait();
+  DesignTrait t2 = new DesignTrait();
+  DesignTrait t3 = new DesignTrait();
+  WantsAlphabet wants = new WantsAlphabet();
+  int refusals = 0;
+  int clock = 0;
+
+  void reset() {
+    t1 = new DesignTrait();
+    t2 = new DesignTrait();
+    t3 = new DesignTrait();
+    t1.born("Addressing", 0, 10);
+    t2.born("Refold report", 0, 20);
+    t3.born("Change batch", 0, 30);
+    refusals = 0;
+    clock = 0;
+  }
+
+  DesignTrait at(int t) {
+    if (t == 1) { return t1; }
+    if (t == 2) { return t2; }
+    return t3;
+  }
+
+  < Apply one act. Returns true if it took effect or had no effect to take. >
+  boolean apply(int w, int target, int amount, String actor, String why) {
+    clock = clock + 1;
+    DesignTrait d = at(target);
+    int e = wants.effect(w);
+    boolean ok = true;
+    if (e == 1) { ok = d.setValue(amount); }
+    if (e == 2) { ok = d.addValue(amount); }
+    if (e == 3) { ok = d.demise(clock, actor, why, "successor of " + d.name); }
+    if (ok == false) { refusals = refusals + 1; }
+    return ok;
+  }
+
+  < One number that differs whenever any value, state or refusal count differs. >
+  int signature() {
+    int s = 0;
+    int t = 1;
+    while (t <= 3) {
+      DesignTrait d = at(t);
+      s = s * 1000003 + d.value * 3 + d.state;
+      t = t + 1;
+    }
+    return s * 31 + refusals;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 301;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

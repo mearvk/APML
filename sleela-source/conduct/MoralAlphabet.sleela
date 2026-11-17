@@ -1,0 +1,42 @@
+#sleela 3.1
+<< MoralAlphabet: the moral-medium alphabet. A theme is in this alphabet only
+   if a check in this repository guarantees it; guaranteedBy names that check.
+   A theme with no check is an aim, not a guarantee, and does not belong here. >>
+class MoralAlphabet extends ConductAlphabet {
+  String title() { return "moral-medium alphabet (guaranteed themes)"; }
+  int size() { return 8; }
+
+  String symbol(int c) {
+    String[] a = { "none", "Attribution", "Consent", "Recording", "Reasoned refusal", "Human approval", "Honest claims", "Conservation", "Recorded demise" };
+    if (valid(c) == false) { return "none"; }
+    return a[c];
+  }
+
+  String meaning(int c) {
+    String[] a = { "none",
+      "an act that changes what others do names an actor and a reason",
+      "a co-exchange commits only after both parties act",
+      "every act is written down before it takes effect",
+      "every refusal carries a reason code",
+      "system-wide changes stay within the human approval budget",
+      "every design proposal states what is still open",
+      "nothing enters or leaves a circuit uncounted",
+      "a demised trait keeps its record and names its successor" };
+    if (valid(c) == false) { return "none"; }
+    return a[c];
+  }
+
+  String guaranteedBy(int c) {
+    String[] a = { "none",
+      "modules/ModulesDemo: interrupt and broadcast without actor or reason are refused",
+      "modules/ModulesDemo: commit, decline, wrong-party and expiry checks",
+      "modules/ApmlBus: log before deliver; conduct/ConductLedger: no edit or remove method",
+      "circuit/CircuitReport: every grounded file is listed under a reason",
+      "medium and professional demos: approvals stay within the human budget",
+      "DesignKnit: every strand states an open item",
+      "medium and professional demos: Kirchhoff and conservation checks",
+      "conduct/ConductDemo: demise without a reason is refused and the record survives" };
+    if (valid(c) == false) { return "none"; }
+    return a[c];
+  }
+}

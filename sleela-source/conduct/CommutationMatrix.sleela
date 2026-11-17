@@ -1,0 +1,90 @@
+#sleela 3.1
+<< CommutationMatrix: predicts, from effect classes alone, whether two acts
+   give the same result in either order. Acts on different targets always
+   commute. On the same target:
+
+             none  set   add   retire
+     none     yes  yes   yes   yes
+     set      yes  no    no    no
+     add      yes  no    yes   no
+     retire   yes  no    no    yes
+
+   Two sets with different values do not commute; two adds do, because
+   addition does not depend on order; retire is idempotent but blocks every
+   later write. This table is the law. PermutationProbe tests it against the
+   real ArtifactStore. >>
+class CommutationMatrix {
+  WantsAlphabet wants = new WantsAlphabet();
+
+  boolean classesCommute(int a, int b) {
+    if (a == 0) { return true; }
+    if (b == 0) { return true; }
+    if (a == 2) {
+      if (b == 2) { return true; }
+    }
+    if (a == 3) {
+      if (b == 3) { return true; }
+    }
+    return false;
+  }
+
+  boolean commute(int wa, int ta, int wb, int tb) {
+    if (ta != tb) { return true; }
+    return classesCommute(wants.effect(wa), wants.effect(wb));
+  }
+
+  void printTable() {
+    String[] n = { "none", "set", "add", "retire" };
+    print("commutation law on one target (yes = order does not matter):");
+    int a = 0;
+    while (a < 4) {
+      String row = "  " + n[a] + ":";
+      int b = 0;
+      while (b < 4) {
+        if (classesCommute(a, b)) { row = row + " yes"; } else { row = row + " no"; }
+        b = b + 1;
+      }
+      print(row);
+      a = a + 1;
+    }
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 302;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

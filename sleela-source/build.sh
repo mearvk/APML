@@ -17,3 +17,5 @@ cd "$here"
 "$sleela" run build/medium.sleela
 "$sleela" compile circuit/*.sleela medium/MediumProfile.sleela professional/*.sleela -o build/professional.sleela
 "$sleela" run build/professional.sleela
+"$sleela" compile circuit/*.sleela medium/MediumProfile.sleela professional/ProfessionalProfile.sleela professional/ProCircuit.sleela conduct/*.sleela -o build/conduct.sleela
+"$sleela" run build/conduct.sleela

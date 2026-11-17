@@ -1,0 +1,40 @@
+#sleela 3.1
+<< WantsAlphabet: the medium wants, that is the subactions a party may take.
+   Each has an effect class that decides how it combines with other acts:
+     0 none    reads or states only: poll, query, trivia, notice
+     1 set     replaces a value: alter, counter
+     2 add     adds to a value: offer, ack (an amount added to an agreed total)
+     3 retire  ends a thing: decline ends an exchange, demise ends a trait
+   Trivia is a want with no effect at all; it commutes with everything.
+   Demise is the strongest want: nothing that writes can follow it. >>
+class WantsAlphabet extends ConductAlphabet {
+  String title() { return "medium wants (subactions)"; }
+  int size() { return 12; }
+
+  String symbol(int c) {
+    String[] a = { "none", "poll", "query", "trivia", "notice", "alter", "add", "interrupt", "offer", "counter", "ack", "decline", "demise" };
+    if (valid(c) == false) { return "none"; }
+    return a[c];
+  }
+
+  int effect(int c) {
+    int[] e = { 0, 0, 0, 0, 0, 1, 2, 0, 2, 1, 2, 3, 3 };
+    if (valid(c) == false) { return 0; }
+    return e[c];
+  }
+
+  < Wants that change what others will do must carry an actor and a reason. >
+  boolean needsAccount(int c) {
+    if (effect(c) != 0) { return true; }
+    if (c == 7) { return true; }
+    return false;
+  }
+
+  String meaning(int c) {
+    String[] n = { "no effect", "sets a value", "adds to a value", "retires the target" };
+    if (valid(c) == false) { return "none"; }
+    String s = n[effect(c)];
+    if (needsAccount(c)) { s = s + "; needs actor and reason"; }
+    return s;
+  }
+}

@@ -19,7 +19,9 @@ sleela-source/
   circuit/                 the six strands as a circuit carrying files: shared classes and input contracts
   medium/                  one lane at 600 files/s
   professional/            eight lanes at 6000 files/s, stricter contracts
-  build.sh                 compiles and runs all four programs
+  conduct/                 alphabets, commutation and solubility matrices, demise, hireability,
+                           profit, ample and support parts, the Tranchion study guide
+  build.sh                 compiles and runs all five programs
 ```
 
 ## What each strand file holds
@@ -93,6 +95,7 @@ knit: all checks passed
 modules: all 41 checks passed
 medium: all 7 checks passed
 professional: all 11 checks passed
+conduct: all 29 checks passed
 ```
 
 ## Language notes
