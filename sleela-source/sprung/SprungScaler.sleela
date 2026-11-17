@@ -1,0 +1,211 @@
+#sleela 3.1
+<< SprungScaler: keeps enough SocketServerNewton servers alive for the
+   current demand, up to 16 at once. Each tick it counts live servers and
+   launches new ones into free slots until the target is met. A server tears
+   itself down at the end of its lifecycle and its slot is reused. All
+   servers share one certificate authority.
+
+   target = ceiling of demand / per-server rate, where the per-server rate is
+   requestsPerServer over the base lifecycle, in requests per second. >>
+class SprungScaler {
+  WeightyProfile profile = null;
+  NewtonCertificateAuthority ca = new NewtonCertificateAuthority();
+  SocketServerNewton s1 = null;
+  SocketServerNewton s2 = null;
+  SocketServerNewton s3 = null;
+  SocketServerNewton s4 = null;
+  SocketServerNewton s5 = null;
+  SocketServerNewton s6 = null;
+  SocketServerNewton s7 = null;
+  SocketServerNewton s8 = null;
+  SocketServerNewton s9 = null;
+  SocketServerNewton s10 = null;
+  SocketServerNewton s11 = null;
+  SocketServerNewton s12 = null;
+  SocketServerNewton s13 = null;
+  SocketServerNewton s14 = null;
+  SocketServerNewton s15 = null;
+  SocketServerNewton s16 = null;
+  int nextId = 0;
+  int spawned = 0;
+  int torn = 0;
+  int vibrantCount = 0;
+  int budgetTeardowns = 0;
+  int maxLive = 0;
+  int maxLifetime = 0;
+  int overBudget = 0;
+  int requests = 0;
+  int weightyBytes = 0;
+  int framesBad = 0;
+  int refusals = 0;
+  int newtonSum = 0;
+  int[] liveAt = new int[2000];
+  int[] targetAt = new int[2000];
+  int samples = 0;
+
+  void setup(WeightyProfile p) { profile = p; }
+
+  SocketServerNewton slot(int i) {
+    if (i == 1) { return s1; }
+    if (i == 2) { return s2; }
+    if (i == 3) { return s3; }
+    if (i == 4) { return s4; }
+    if (i == 5) { return s5; }
+    if (i == 6) { return s6; }
+    if (i == 7) { return s7; }
+    if (i == 8) { return s8; }
+    if (i == 9) { return s9; }
+    if (i == 10) { return s10; }
+    if (i == 11) { return s11; }
+    if (i == 12) { return s12; }
+    if (i == 13) { return s13; }
+    if (i == 14) { return s14; }
+    if (i == 15) { return s15; }
+    return s16;
+  }
+
+  void put(int i, SocketServerNewton s) {
+    if (i == 1) { s1 = s; }
+    if (i == 2) { s2 = s; }
+    if (i == 3) { s3 = s; }
+    if (i == 4) { s4 = s; }
+    if (i == 5) { s5 = s; }
+    if (i == 6) { s6 = s; }
+    if (i == 7) { s7 = s; }
+    if (i == 8) { s8 = s; }
+    if (i == 9) { s9 = s; }
+    if (i == 10) { s10 = s; }
+    if (i == 11) { s11 = s; }
+    if (i == 12) { s12 = s; }
+    if (i == 13) { s13 = s; }
+    if (i == 14) { s14 = s; }
+    if (i == 15) { s15 = s; }
+    if (i == 16) { s16 = s; }
+  }
+
+  boolean slotLive(int i) {
+    SocketServerNewton s = slot(i);
+    if (s == null) { return false; }
+    return s.isLive();
+  }
+
+  < Requests per second, as a step function of time. >
+  int demandAt(int ms) {
+    if (ms < 2000) { return 80; }
+    if (ms < 5000) { return 600; }
+    if (ms < 10000) { return 120; }
+    return 0;
+  }
+
+  int targetFor(int demand) {
+    int perServer = profile.requestsPerServer * 1000 / profile.baseLifecycleMs();
+    int t = (demand + perServer - 1) / perServer;
+    if (t > profile.maxServers) { t = profile.maxServers; }
+    return t;
+  }
+
+  < Collect the totals of a finished server before its slot is reused. >
+  void retire(SocketServerNewton s) {
+    torn = torn + 1;
+    if (s.vibrant) { vibrantCount = vibrantCount + 1; }
+    if (s.lifetimeMs() > maxLifetime) { maxLifetime = s.lifetimeMs(); }
+    if (s.lifetimeMs() > profile.budgetMs) { overBudget = overBudget + 1; }
+    if (s.weightyDone == false) { budgetTeardowns = budgetTeardowns + 1; }
+    requests = requests + s.requestsServed;
+    if (s.weightyDone) { weightyBytes = weightyBytes + profile.payloadBytes; }
+    if (s.framesVerified != s.framesSent - s.framesResent) { framesBad = framesBad + 1; }
+    refusals = refusals + s.refusals;
+    newtonSum = newtonSum + s.newton();
+  }
+
+  void step(int nowMs, boolean acceptNew) {
+    int live = 0;
+    int i = 1;
+    while (i <= 16) {
+      SocketServerNewton s = slot(i);
+      if (s != null) {
+        if (s.isDone() == false) {
+          s.tick(nowMs);
+          if (s.isDone()) { retire(s); }
+        }
+      }
+      if (slotLive(i)) { live = live + 1; }
+      i = i + 1;
+    }
+    int target = 0;
+    if (acceptNew) { target = targetFor(demandAt(nowMs)); }
+    i = 1;
+    while (i <= 16) {
+      if (live >= target) { i = 17; }
+      else {
+        if (slotLive(i) == false) {
+          SocketServerNewton n = new SocketServerNewton();
+          nextId = nextId + 1;
+          n.setup(nextId, profile, ca);
+          n.launch(nowMs);
+          put(i, n);
+          spawned = spawned + 1;
+          live = live + 1;
+        }
+        i = i + 1;
+      }
+    }
+    if (live > maxLive) { maxLive = live; }
+    if (samples < 2000) {
+      liveAt[samples] = live;
+      targetAt[samples] = target;
+      samples = samples + 1;
+    }
+  }
+
+  int liveCount() {
+    int n = 0;
+    int i = 1;
+    while (i <= 16) {
+      if (slotLive(i)) { n = n + 1; }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  int liveAtMs(int ms) { return liveAt[ms / profile.tickMs]; }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 513;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

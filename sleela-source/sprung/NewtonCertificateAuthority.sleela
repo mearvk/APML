@@ -1,0 +1,107 @@
+#sleela 3.1
+<< NewtonCertificateAuthority: issues, checks and revokes the certificates
+   that SocketServerNewton servers carry. A certificate has a serial, a
+   subject, an issue time, an expiry time and a revoked flag. This models the
+   certificate lifecycle only. There is no cryptography: a real deployment
+   would use X.509 certificates over TLS 1.3 (RFC 8446) from a real CA.
+
+   Rules: only the authority issues; a certificate is valid only for its
+   subject, between issue and expiry, and while not revoked; renewing issues a
+   new serial and revokes the old one; nothing is ever deleted. >>
+class NewtonCertificateAuthority {
+  String authorityName = "sprung-ca";
+  int cap = 4096;
+  int size = 0;
+  int[] subject = new int[4096];
+  int[] issuedAt = new int[4096];
+  int[] expiresAt = new int[4096];
+  boolean[] revoked = new boolean[4096];
+  int issuedCount = 0;
+  int revokedCount = 0;
+  int refusedChecks = 0;
+
+  < Returns a serial number, or -1 if the authority is full. >
+  int issue(int subj, int nowMs, int validMs) {
+    if (size >= cap) { return -1; }
+    int s = size;
+    subject[s] = subj;
+    issuedAt[s] = nowMs;
+    expiresAt[s] = nowMs + validMs;
+    revoked[s] = false;
+    size = size + 1;
+    issuedCount = issuedCount + 1;
+    return s;
+  }
+
+  void revoke(int serial) {
+    if (serial < 0) { return; }
+    if (serial >= size) { return; }
+    if (revoked[serial]) { return; }
+    revoked[serial] = true;
+    revokedCount = revokedCount + 1;
+  }
+
+  int renew(int serial, int subj, int nowMs, int validMs) {
+    revoke(serial);
+    return issue(subj, nowMs, validMs);
+  }
+
+  < 0 if valid, otherwise 1 unknown, 2 wrong subject, 3 not yet valid, 4 expired, 5 revoked. >
+  int check(int serial, int subj, int nowMs) {
+    int r = 0;
+    if (serial < 0) { r = 1; }
+    if (r == 0) { if (serial >= size) { r = 1; } }
+    if (r == 0) { if (subject[serial] != subj) { r = 2; } }
+    if (r == 0) { if (nowMs < issuedAt[serial]) { r = 3; } }
+    if (r == 0) { if (nowMs > expiresAt[serial]) { r = 4; } }
+    if (r == 0) { if (revoked[serial]) { r = 5; } }
+    if (r != 0) { refusedChecks = refusedChecks + 1; }
+    return r;
+  }
+
+  String checkName(int r) {
+    String[] a = { "valid", "unknown serial", "wrong subject", "not yet valid", "expired", "revoked" };
+    return a[r];
+  }
+
+  int outstanding() { return issuedCount - revokedCount; }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 511;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

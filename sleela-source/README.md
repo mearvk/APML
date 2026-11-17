@@ -22,7 +22,8 @@ sleela-source/
   conduct/                 alphabets, commutation and solubility matrices, demise, hireability,
                            profit, ample and support parts, the Tranchion study guide
   user/                    User Class II: the MORAL.md statements enforced for one user
-  build.sh                 compiles and runs all six programs
+  sprung/                  Weighty: SocketServerNewton servers built, certified and torn down within 2 s
+  build.sh                 compiles and runs all seven programs
 ```
 
 ## What each strand file holds
@@ -98,6 +99,7 @@ medium: all 7 checks passed
 professional: all 11 checks passed
 conduct: all 29 checks passed
 user: all 19 checks passed
+weighty: all 30 checks passed
 ```
 
 ## Language notes

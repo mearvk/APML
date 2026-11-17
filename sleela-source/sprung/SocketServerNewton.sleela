@@ -1,0 +1,321 @@
+#sleela 3.1
+<< SocketServerNewton: one short-lived Sprung server, run through the Weighty
+   lifecycle within a fixed budget (2000 ms by default):
+
+     1 built      the server is created and bound
+     2 served     ordinary data is sent (requestsPerServer requests)
+     3 cycled     connections are drained and buffers reset
+     4 renewed    configuration and keys are refreshed
+     5 certified  the authority issues a certificate for this server
+     6 weighty    the weighty payload is sent in checksummed frames, only
+                  under a valid certificate
+     7 recycled   payload buffers are released and counters reset
+     8 vibrant    renewed again with a fresh certificate and a health check
+     9 torn down  the certificate is revoked and the server is gone
+
+   Every stage must follow the one before it; anything else is refused and
+   counted with a reason. Tear down is allowed from any live stage. Before a
+   stage is started the server checks that it and the tear down still fit in
+   the budget; if not, it tears down at once with the reason budget.
+
+   Weight is measured in bytes. The Newton figure of a server is its weighty
+   throughput in bytes per millisecond. Sockets and bytes are simulated: the
+   checksums are computed per frame from a seed, not over real data. >>
+class SocketServerNewton {
+  int id = 0;
+  WeightyProfile profile = null;
+  NewtonCertificateAuthority ca = null;
+  int stage = 0;
+  int pending = 0;
+  int startMs = 0;
+  int stageEndMs = 0;
+  int endMs = -1;
+  int certSerial = -1;
+  int bytesSent = 0;
+  int requestsServed = 0;
+  int framesSent = 0;
+  int framesVerified = 0;
+  int framesResent = 0;
+  int corruptFrame = -1;
+  int weightyStartMs = 0;
+  int weightyEndMs = 0;
+  boolean weightyDone = false;
+  boolean vibrant = false;
+  boolean healthy = false;
+  int refusals = 0;
+  String lastRefusal = "";
+  String tornReason = "";
+  int[] stageAt = new int[10];
+  boolean[] entered = new boolean[10];
+
+  void setup(int serverId, WeightyProfile p, NewtonCertificateAuthority authority) {
+    id = serverId;
+    profile = p;
+    ca = authority;
+  }
+
+  String stageName(int s) {
+    String[] a = { "none", "built", "served", "cycled", "renewed", "certified", "weighty", "recycled", "vibrant", "torn down" };
+    return a[s];
+  }
+
+  int mix(int x) {
+    int v = x % 2147483648;
+    if (v < 0) { v = 0 - v; }
+    int h = (v * 1103515245 + 12345) % 2147483648;
+    h = (h * 48271) % 2147483647;
+    return h;
+  }
+
+  int baseMs(int s) {
+    if (s == 1) { return profile.buildMs; }
+    if (s == 2) { return profile.sendMs; }
+    if (s == 3) { return profile.cycleMs; }
+    if (s == 4) { return profile.renewMs; }
+    if (s == 5) { return profile.certifyMs; }
+    if (s == 6) { return profile.weightyMs(); }
+    if (s == 7) { return profile.recycleMs; }
+    if (s == 8) { return profile.vibrantMs; }
+    return profile.teardownMs;
+  }
+
+  int durationMs(int s) {
+    int j = profile.jitterPercent;
+    int r = mix(id * 16 + s) % (2 * j + 1) - j;
+    int d = baseMs(s) * (100 + r) / 100;
+    if (d < 1) { d = 1; }
+    return d;
+  }
+
+  boolean refuse(String why) {
+    refusals = refusals + 1;
+    lastRefusal = why;
+    return false;
+  }
+
+  boolean expect(int s, String what) {
+    if (stage == 9) { return refuse(what + " after tear down"); }
+    if (stage != s - 1) { return refuse(what + " out of order: server is " + stageName(stage)); }
+    return true;
+  }
+
+  void enter(int s, int nowMs) {
+    stage = s;
+    stageAt[s] = nowMs;
+    entered[s] = true;
+  }
+
+  boolean build(int nowMs) {
+    if (expect(1, "build") == false) { return false; }
+    startMs = nowMs;
+    enter(1, nowMs);
+    return true;
+  }
+
+  boolean sendData(int nowMs) {
+    if (expect(2, "send data") == false) { return false; }
+    requestsServed = profile.requestsPerServer;
+    bytesSent = bytesSent + requestsServed * 2048;
+    enter(2, nowMs);
+    return true;
+  }
+
+  boolean cycle(int nowMs) {
+    if (expect(3, "cycle") == false) { return false; }
+    enter(3, nowMs);
+    return true;
+  }
+
+  boolean renew(int nowMs) {
+    if (expect(4, "renew") == false) { return false; }
+    enter(4, nowMs);
+    return true;
+  }
+
+  boolean certify(int nowMs) {
+    if (expect(5, "certify") == false) { return false; }
+    certSerial = ca.issue(id, nowMs, profile.certValidMs);
+    if (certSerial < 0) { return refuse("certify: authority full"); }
+    enter(5, nowMs);
+    return true;
+  }
+
+  < Frames are checked one by one; a frame whose checksum does not match is sent again once. >
+  boolean sendWeighty(int nowMs) {
+    if (expect(6, "weighty send") == false) { return false; }
+    int c = ca.check(certSerial, id, nowMs);
+    if (c != 0) { return refuse("weighty send: certificate " + ca.checkName(c)); }
+    int f = 0;
+    int n = profile.frames();
+    while (f < n) {
+      int sent = mix(id * 100003 + f);
+      int got = sent;
+      if (f == corruptFrame) {
+        if (framesResent == 0) { got = sent + 1; }
+      }
+      framesSent = framesSent + 1;
+      if (got != sent) {
+        framesResent = framesResent + 1;
+        framesSent = framesSent + 1;
+      }
+      framesVerified = framesVerified + 1;
+      f = f + 1;
+    }
+    bytesSent = bytesSent + profile.payloadBytes;
+    weightyEndMs = nowMs;
+    weightyDone = true;
+    enter(6, nowMs);
+    return true;
+  }
+
+  boolean recycle(int nowMs) {
+    if (expect(7, "recycle") == false) { return false; }
+    enter(7, nowMs);
+    return true;
+  }
+
+  boolean renewVibrant(int nowMs) {
+    if (expect(8, "renew as Vibrant") == false) { return false; }
+    certSerial = ca.renew(certSerial, id, nowMs, profile.certValidMs);
+    healthy = ca.check(certSerial, id, nowMs) == 0;
+    if (healthy == false) { return refuse("renew as Vibrant: health check failed"); }
+    vibrant = true;
+    enter(8, nowMs);
+    return true;
+  }
+
+  boolean tearDown(int nowMs, String why) {
+    if (stage == 0) { return refuse("tear down before build"); }
+    if (stage == 9) { return refuse("tear down twice"); }
+    ca.revoke(certSerial);
+    tornReason = why;
+    endMs = nowMs;
+    enter(9, nowMs);
+    return true;
+  }
+
+  boolean perform(int s, int nowMs) {
+    if (s == 1) { return build(nowMs); }
+    if (s == 2) { return sendData(nowMs); }
+    if (s == 3) { return cycle(nowMs); }
+    if (s == 4) { return renew(nowMs); }
+    if (s == 5) { return certify(nowMs); }
+    if (s == 6) { return sendWeighty(nowMs); }
+    if (s == 7) { return recycle(nowMs); }
+    if (s == 8) { return renewVibrant(nowMs); }
+    return tearDown(nowMs, "lifecycle complete");
+  }
+
+  < Start the lifecycle; the build stage completes after its duration. >
+  void launch(int nowMs) {
+    startMs = nowMs;
+    pending = 1;
+    stageEndMs = nowMs + durationMs(1);
+  }
+
+  < Called each tick. Completes the pending stage when its time is up, then schedules the next one inside the budget. >
+  void tick(int nowMs) {
+    if (stage == 9) { return; }
+    if (pending == 0) { return; }
+    if (nowMs < stageEndMs) { return; }
+    if (pending == 1) {
+      build(startMs);
+      stageAt[1] = nowMs;
+    } else {
+      if (perform(pending, nowMs) == false) {
+        if (stage != 9) { tearDown(nowMs, "refused: " + lastRefusal); }
+        pending = 0;
+        return;
+      }
+    }
+    if (stage == 9) { pending = 0; return; }
+    int nxt = stage + 1;
+    if (nxt < 9) {
+      int d = durationMs(nxt);
+      if (nowMs + d + durationMs(9) > startMs + profile.budgetMs) {
+        tearDown(nowMs, "budget: " + stageName(nxt) + " would not fit");
+        pending = 0;
+        return;
+      }
+      if (nxt == 6) { weightyStartMs = nowMs; }
+      pending = nxt;
+      stageEndMs = nowMs + d;
+      return;
+    }
+    pending = 9;
+    stageEndMs = nowMs + durationMs(9);
+  }
+
+  boolean isLive() {
+    if (pending == 0) { return false; }
+    if (stage == 9) { return false; }
+    return true;
+  }
+
+  boolean isDone() {
+    if (stage == 9) { return true; }
+    return false;
+  }
+
+  int lifetimeMs() {
+    if (endMs < 0) { return -1; }
+    return endMs - startMs;
+  }
+
+  < Bytes per millisecond over the weighty stage. >
+  int newton() {
+    int d = weightyEndMs - weightyStartMs;
+    if (weightyDone == false) { return 0; }
+    if (d <= 0) { return 0; }
+    return profile.payloadBytes / d;
+  }
+
+  void printTimeline() {
+    String s = "  server " + id + ":";
+    int i = 1;
+    while (i <= 9) {
+      if (entered[i]) { s = s + " " + stageName(i) + "@" + (stageAt[i] - startMs); }
+      i = i + 1;
+    }
+    print(s + " ms; ended: " + tornReason);
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 512;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

@@ -21,3 +21,5 @@ cd "$here"
 "$sleela" run build/conduct.sleela
 "$sleela" compile conduct/ConductLedger.sleela user/*.sleela -o build/user.sleela
 "$sleela" run build/user.sleela
+"$sleela" compile sprung/*.sleela -o build/weighty.sleela
+"$sleela" run build/weighty.sleela

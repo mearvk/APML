@@ -1,0 +1,91 @@
+#sleela 3.1
+<< WeightyProfile: the timing and size settings of the Weighty framework.
+   All times are simulated milliseconds. They are the drafter assumptions for
+   a server on a local network, not measurements; change them here.
+
+   Stages of one SocketServerNewton and their base time:
+     build 120, send data 200, cycle 50, renew 80, certify 150,
+     weighty send (payload bytes / link bytes per ms), recycle 60,
+     renew as Vibrant 80, tear down 40
+   Each server varies its stage times by up to 30 percent either way.
+   The whole lifecycle must finish within budgetMs, 2000 by default. >>
+class WeightyProfile {
+  int budgetMs = 2000;
+  int tickMs = 10;
+  int buildMs = 120;
+  int sendMs = 200;
+  int cycleMs = 50;
+  int renewMs = 80;
+  int certifyMs = 150;
+  int recycleMs = 60;
+  int vibrantMs = 80;
+  int teardownMs = 40;
+  int jitterPercent = 30;
+  int linkBytesPerMs = 50000;
+  int payloadBytes = 4194304;
+  int frameBytes = 65536;
+  int certValidMs = 1500;
+  int requestsPerServer = 40;
+  int maxServers = 16;
+
+  int frames() {
+    int f = payloadBytes / frameBytes;
+    if (payloadBytes % frameBytes != 0) { f = f + 1; }
+    return f;
+  }
+
+  int weightyMs() {
+    int ms = payloadBytes / linkBytesPerMs;
+    if (ms < 1) { ms = 1; }
+    return ms;
+  }
+
+  int baseLifecycleMs() {
+    return buildMs + sendMs + cycleMs + renewMs + certifyMs + weightyMs() + recycleMs + vibrantMs + teardownMs;
+  }
+
+  void describe() {
+    print("Weighty profile: budget " + budgetMs + " ms per server, tick " + tickMs + " ms, up to " + maxServers + " servers at once");
+    print("  stages (ms): build " + buildMs + ", send " + sendMs + ", cycle " + cycleMs + ", renew " + renewMs + ", certify " + certifyMs + ", weighty " + weightyMs() + ", recycle " + recycleMs + ", vibrant " + vibrantMs + ", tear down " + teardownMs + "; jitter " + jitterPercent + "%");
+    print("  base lifecycle " + baseLifecycleMs() + " ms; weighty payload " + payloadBytes + " bytes in " + frames() + " frames of " + frameBytes + "; link " + linkBytesPerMs + " bytes/ms; certificate valid " + certValidMs + " ms");
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 501;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

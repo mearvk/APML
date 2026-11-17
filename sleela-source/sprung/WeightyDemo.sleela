@@ -1,0 +1,140 @@
+#sleela 3.1
+<< WeightyDemo: checks the Weighty framework.
+     sleela compile sprung/*.sleela -o build/weighty.sleela
+     sleela run build/weighty.sleela >>
+class WeightyDemo {
+  int failures = 0;
+  int passes = 0;
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  < Drive one server until it is torn down or the clock passes the limit. >
+  int runOne(SocketServerNewton s, int fromMs, int limitMs, int tickMs) {
+    s.launch(fromMs);
+    int t = fromMs;
+    while (t <= limitMs) {
+      s.tick(t);
+      if (s.isDone()) { return t; }
+      t = t + tickMs;
+    }
+    return t;
+  }
+
+  void oneServer() {
+    print("== one server, full lifecycle");
+    WeightyProfile p = new WeightyProfile();
+    p.describe();
+    NewtonCertificateAuthority ca = new NewtonCertificateAuthority();
+    SocketServerNewton s = new SocketServerNewton();
+    s.setup(1, p, ca);
+    runOne(s, 0, 5000, p.tickMs);
+    s.printTimeline();
+    print("  lifetime " + s.lifetimeMs() + " ms, bytes sent " + s.bytesSent + ", frames " + s.framesVerified + ", Newton " + s.newton() + " bytes/ms");
+    expect(s.isDone(), "the server reached tear down");
+    expect(s.vibrant, "the server was renewed as Vibrant");
+    expect(s.weightyDone, "the weighty payload was sent");
+    expect(s.lifetimeMs() <= p.budgetMs, "the whole lifecycle fit in 2000 ms");
+    expect(s.framesVerified == p.frames(), "every frame was verified");
+    expect(ca.outstanding() == 0, "no certificate is left outstanding after tear down");
+    expect(ca.issuedCount == 2, "two certificates were issued: certify and Vibrant");
+  }
+
+  void orderRules() {
+    print("== order and certificate rules");
+    WeightyProfile p = new WeightyProfile();
+    NewtonCertificateAuthority ca = new NewtonCertificateAuthority();
+    SocketServerNewton s = new SocketServerNewton();
+    s.setup(2, p, ca);
+    expect(s.sendData(0) == false, "send data before build is refused");
+    expect(s.tearDown(0, "x") == false, "tear down before build is refused");
+    s.build(0);
+    expect(s.sendWeighty(10) == false, "weighty send before certify is refused");
+    print("  last refusal: " + s.lastRefusal);
+    s.sendData(100);
+    s.cycle(150);
+    s.renew(200);
+    s.certify(300);
+    expect(s.sendWeighty(300 + p.certValidMs + 100) == false, "weighty send under an expired certificate is refused");
+    print("  last refusal: " + s.lastRefusal);
+    expect(s.sendWeighty(400), "weighty send under a valid certificate is accepted");
+    s.tearDown(500, "test");
+    expect(s.sendData(600) == false, "nothing is accepted after tear down");
+    expect(ca.check(s.certSerial, 2, 450) == 5, "the certificate is revoked at tear down");
+    SocketServerNewton other = new SocketServerNewton();
+    other.setup(3, p, ca);
+    expect(ca.check(s.certSerial, 3, 450) == 2, "a certificate is valid only for its own server");
+  }
+
+  void corruption() {
+    print("== a corrupted frame");
+    WeightyProfile p = new WeightyProfile();
+    NewtonCertificateAuthority ca = new NewtonCertificateAuthority();
+    SocketServerNewton s = new SocketServerNewton();
+    s.setup(4, p, ca);
+    s.corruptFrame = 17;
+    runOne(s, 0, 5000, p.tickMs);
+    print("  frames sent " + s.framesSent + ", resent " + s.framesResent + ", verified " + s.framesVerified);
+    expect(s.framesResent == 1, "the bad frame was detected and sent again");
+    expect(s.framesVerified == p.frames(), "all frames verified after the resend");
+  }
+
+  void budget() {
+    print("== a payload too heavy for the budget");
+    WeightyProfile p = new WeightyProfile();
+    p.payloadBytes = 125829120;
+    NewtonCertificateAuthority ca = new NewtonCertificateAuthority();
+    SocketServerNewton s = new SocketServerNewton();
+    s.setup(5, p, ca);
+    runOne(s, 0, 10000, p.tickMs);
+    s.printTimeline();
+    expect(s.weightyDone == false, "a 120 MiB payload is not started because it cannot finish in time");
+    expect(s.lifetimeMs() <= p.budgetMs, "the server still ends inside 2000 ms");
+    expect(s.vibrant == false, "a server torn down for budget is not called Vibrant");
+    expect(ca.outstanding() == 0, "its certificate is revoked");
+  }
+
+  void scaling() {
+    print("== scaling over 10 s of demand: 80, then 600, then 120 requests/s");
+    WeightyProfile p = new WeightyProfile();
+    SprungScaler sc = new SprungScaler();
+    sc.setup(p);
+    int t = 0;
+    while (t < 10000) {
+      sc.step(t, true);
+      t = t + p.tickMs;
+    }
+    int drainUntil = t + 3000;
+    while (t < drainUntil) {
+      sc.step(t, false);
+      t = t + p.tickMs;
+    }
+    print("  live servers at 1 s: " + sc.liveAtMs(1000) + ", at 3.5 s: " + sc.liveAtMs(3500) + ", at 8 s: " + sc.liveAtMs(8000) + "; peak " + sc.maxLive);
+    print("  spawned " + sc.spawned + ", torn down " + sc.torn + ", Vibrant " + sc.vibrantCount + ", longest lifecycle " + sc.maxLifetime + " ms");
+    print("  requests served " + sc.requests + ", weighty bytes " + sc.weightyBytes + ", average Newton " + (sc.newtonSum / sc.torn) + " bytes/ms");
+    NewtonCertificateAuthority ca = sc.ca;
+    print("  certificates issued " + ca.issuedCount + ", revoked " + ca.revokedCount + ", refused checks " + ca.refusedChecks);
+    expect(sc.liveAtMs(3500) > sc.liveAtMs(1000), "servers scale up with demand");
+    expect(sc.liveAtMs(8000) < sc.liveAtMs(3500), "servers scale down when demand falls");
+    expect(sc.maxLive <= p.maxServers, "never more than 16 servers at once");
+    expect(sc.overBudget == 0, "every lifecycle fit in 2000 ms");
+    expect(sc.spawned == sc.torn, "every server that was built was torn down");
+    expect(sc.vibrantCount == sc.torn, "every server reached Vibrant before tear down");
+    expect(ca.outstanding() == 0, "no certificate is left outstanding");
+    expect(sc.framesBad == 0, "every weighty frame was verified");
+    expect(sc.refusals == 0, "no stage was refused in normal running");
+  }
+
+  void main() {
+    print("Weighty: SocketServerNewton servers scaled by Sprung");
+    oneServer();
+    orderRules();
+    corruption();
+    budget();
+    scaling();
+    if (failures == 0) { print("weighty: all " + passes + " checks passed"); }
+    else { print("weighty: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}
