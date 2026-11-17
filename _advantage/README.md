@@ -80,7 +80,15 @@ still awaiting the owner's approval. Cordial labels from the analysis are the dr
 ## Build and run
 
     mvn package        # target/advantage.war
-Deploy to Tomcat 10.1+ or Jetty 12 (Jakarta EE 10, Servlet 6), then open `/advantage/`.
+
+Or use `deploy.sh` (Linux; needs JDK 17+, Maven, unzip). It renders `assumed-aliases/`, builds the WAR,
+checks that the WAR holds every source type, copies it, and optionally waits for `/api/v1/health`:
+
+    ./deploy.sh --build-only
+    DEPLOY_TARGET=/var/lib/tomcat10/webapps ./deploy.sh
+    DEPLOY_TARGET=user@host:/opt/tomcat/webapps DEPLOY_URL=https://host/advantage ./deploy.sh
+
+`./deploy.sh --help` lists every option. Manual route: deploy to Tomcat 10.1+ or Jetty 12 (Jakarta EE 10, Servlet 6), then open `/advantage/`.
 
 | URL | Source type |
 |-----|-------------|
