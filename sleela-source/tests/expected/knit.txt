@@ -1,0 +1,21 @@
+APML six-strand design proposal
+1 APML hands off to Bloq, faces Falthruu
+2 Bloq hands off to Bodi, faces Runyn
+3 Bodi hands off to Sprung, faces Sprung
+4 Sprung hands off to Runyn, faces Bodi
+5 Runyn hands off to Falthruu, faces Bloq
+6 Falthruu hands off to APML, faces APML
+PASS hand-off chain closes after six steps
+PASS hand-off chain visits all six strands once
+PASS middle fold pairs 1-6, 2-5, 3-4
+PASS every strand carries an agency guard
+PASS every strand states an open item
+cross-cutting principles: 10
+terms still owed a definition by the owner: 6
+  owed: Voltage on Time | needs: A formula, units and one numeric example.
+  owed: Attention Creation Principle | needs: The rule for treating a group as one actor.
+  owed: Economic and mode | needs: What is consumed and what heals.
+  owed: Two | needs: The base gauge as a number.
+  owed: Public speaker is born | needs: The system event this marks.
+  owed: Creative time-force equation | needs: The equation written out with its terms.
+knit: all checks passed

@@ -1,0 +1,47 @@
+name: sleela-source regression
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sleela-source/**"
+      - "sleela-3.2-binaries/toolchain/**"
+      - "sleela-3.2-binaries/SHA256SUMS"
+      - ".github/workflows/sleela-regression.yml"
+  pull_request:
+    paths:
+      - "sleela-source/**"
+      - "sleela-3.2-binaries/toolchain/**"
+      - "sleela-3.2-binaries/SHA256SUMS"
+      - ".github/workflows/sleela-regression.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install runtime libraries for the sleela binary
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libx11-6 libfontconfig1 libfreetype6 libgomp1 libxml2 libpng16-16t64
+
+      - name: Verify the toolchain binary against SHA256SUMS
+        working-directory: sleela-3.2-binaries
+        run: grep ' toolchain/sleela$' SHA256SUMS | sha256sum -c -
+
+      - name: Run regression tests
+        run: bash sleela-source/tests/run-regression.sh
+
+      - name: Keep outputs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sleela-regression-output
+          path: sleela-source/tests/.build/

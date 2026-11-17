@@ -1,0 +1,50 @@
+Weighty: SocketServerNewton servers scaled by Sprung
+== one server, full lifecycle
+Weighty profile: budget 2000 ms per server, tick 10 ms, up to 16 servers at once
+  stages (ms): build 120, send 200, cycle 50, renew 80, certify 150, weighty 83, recycle 60, vibrant 80, tear down 40; jitter 30%
+  base lifecycle 863 ms; weighty payload 4194304 bytes in 64 frames of 65536; link 50000 bytes/ms; certificate valid 1500 ms
+  server 1: built@100 served@340 cycled@400 renewed@480 certified@610 weighty@720 recycled@800 vibrant@890 torn down@930 ms; ended: lifecycle complete
+  lifetime 930 ms, bytes sent 4276224, frames 64, Newton 38130 bytes/ms
+PASS the server reached tear down
+PASS the server was renewed as Vibrant
+PASS the weighty payload was sent
+PASS the whole lifecycle fit in 2000 ms
+PASS every frame was verified
+PASS no certificate is left outstanding after tear down
+PASS two certificates were issued: certify and Vibrant
+== order and certificate rules
+PASS send data before build is refused
+PASS tear down before build is refused
+PASS weighty send before certify is refused
+  last refusal: weighty send out of order: server is built
+PASS weighty send under an expired certificate is refused
+  last refusal: weighty send: certificate expired
+PASS weighty send under a valid certificate is accepted
+PASS nothing is accepted after tear down
+PASS the certificate is revoked at tear down
+PASS a certificate is valid only for its own server
+== a corrupted frame
+  frames sent 65, resent 1, verified 64
+PASS the bad frame was detected and sent again
+PASS all frames verified after the resend
+== a payload too heavy for the budget
+  server 5: built@120 served@270 cycled@310 renewed@400 certified@560 torn down@560 ms; ended: budget: weighty would not fit
+PASS a 120 MiB payload is not started because it cannot finish in time
+PASS the server still ends inside 2000 ms
+PASS a server torn down for budget is not called Vibrant
+PASS its certificate is revoked
+== scaling over 10 s of demand: 80, then 600, then 120 requests/s
+  live servers at 1 s: 2, at 3.5 s: 14, at 8 s: 3; peak 14
+  spawned 76, torn down 76, Vibrant 76, longest lifecycle 1010 ms
+  requests served 3040, weighty bytes 318767104, average Newton 50122 bytes/ms
+  certificates issued 152, revoked 152, refused checks 0
+PASS servers scale up with demand
+PASS servers scale down when demand falls
+PASS never more than 16 servers at once
+PASS every lifecycle fit in 2000 ms
+PASS every server that was built was torn down
+PASS every server reached Vibrant before tear down
+PASS no certificate is left outstanding
+PASS every weighty frame was verified
+PASS no stage was refused in normal running
+weighty: all 30 checks passed

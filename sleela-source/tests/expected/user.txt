@@ -1,0 +1,23 @@
+User Class II: the moral statements, enforced for one user
+PASS 5: nobody acts on the user before consent
+PASS 5: with consent, an attributed act is accepted
+PASS 1, 2: an act without a reason is refused, whoever asks
+PASS 1: the user may refuse without giving a reason
+PASS 4: turning the user away without a reason code is not allowed
+PASS 4: turning the user away with a reason code is recorded
+PASS 8: health data is refused
+PASS 8: age is refused
+PASS 8: a stated preference is stored
+PASS growth: a capability needs an actor and a reason
+PASS growth: an attributed capability is granted
+PASS 6: no claim is made that the record does not hold
+PASS 5: after withdrawal, acts on the user stop
+  entries about the user: 13
+PASS 3: the user can see every entry about them
+  export: user user-7f3a (Sam); consent not given; accepted 1, refused 1; refusals received 1; language = en; capability approve changes (Grade 4 evidence); entries about the user 13
+PASS 9: the user can take everything about them
+PASS 7: the account is closed
+PASS 7: closing adds to the record and removes nothing
+PASS 7: after closing only the pseudonym and the record remain
+PASS 7: nothing new is granted after closing
+user: all 19 checks passed

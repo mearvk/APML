@@ -1,0 +1,136 @@
+Conduct design: alphabets, permutability, solubility, demise, hireability, profit, ample and support
+== alphabets
+moral-medium alphabet (guaranteed themes) (8 symbols)
+  1 Attribution: an act that changes what others do names an actor and a reason
+  2 Consent: a co-exchange commits only after both parties act
+  3 Recording: every act is written down before it takes effect
+  4 Reasoned refusal: every refusal carries a reason code
+  5 Human approval: system-wide changes stay within the human approval budget
+  6 Honest claims: every design proposal states what is still open
+  7 Conservation: nothing enters or leaves a circuit uncounted
+  8 Recorded demise: a demised trait keeps its record and names its successor
+prosaic alphabet (leading causes and carry-cases) (20 symbols)
+  1 out of scope: leading cause: refusal reason in the circuit
+  2 malformed: leading cause: refusal reason in the circuit
+  3 missing header: leading cause: refusal reason in the circuit
+  4 too many lines: leading cause: refusal reason in the circuit
+  5 too wide: leading cause: refusal reason in the circuit
+  6 missing metadata: leading cause: refusal reason in the circuit
+  7 generated without mark: leading cause: refusal reason in the circuit
+  8 duplicate content: leading cause: refusal reason in the circuit
+  9 buffer full: leading cause: refusal reason in the circuit
+  10 binary content: leading cause: refusal reason in the circuit
+  11 long: leading cause: Runyn finding after consideration
+  12 wide: leading cause: Runyn finding after consideration
+  13 many imports: leading cause: Runyn finding after consideration
+  14 many members: leading cause: Runyn finding after consideration
+  15 header: carry-case: travels with the act or file
+  16 metadata: carry-case: travels with the act or file
+  17 generated mark: carry-case: travels with the act or file
+  18 actor: carry-case: travels with the act or file
+  19 reason: carry-case: travels with the act or file
+  20 correlation id: carry-case: travels with the act or file
+medium wants (subactions) (12 symbols)
+  1 poll: no effect
+  2 query: no effect
+  3 trivia: no effect
+  4 notice: no effect
+  5 alter: sets a value; needs actor and reason
+  6 add: adds to a value; needs actor and reason
+  7 interrupt: no effect; needs actor and reason
+  8 offer: adds to a value; needs actor and reason
+  9 counter: sets a value; needs actor and reason
+  10 ack: adds to a value; needs actor and reason
+  11 decline: retires the target; needs actor and reason
+  12 demise: retires the target; needs actor and reason
+PASS every moral-medium theme names the check that guarantees it
+PASS code 0 is never a symbol
+PASS too many lines is a leading cause
+PASS actor is a carry-case
+== permutability
+commutation law on one target (yes = order does not matter):
+  none: yes yes yes yes
+  set: yes no no no
+  add: yes no yes no
+  retire: yes no no yes
+  pair cases run: 288, agreeing with the law: 288
+PASS the commutation law predicts every pair in both orders
+  two adds on one trait, an alter on another, trivia: 1 distinct result(s) over 24 orders
+PASS law predicts that design is permutable
+PASS all 24 orders give one result
+  add, alter and demise on one trait, a query: 5 distinct results over 24 orders
+PASS law predicts that design is not permutable
+PASS orders give different results
+== solubility
+conduct matrix A (rows are quantities, columns are acts: query notice alter ack demise):
+  records: 1 1 1 1 1
+  approvals: 0 0 1 1 1
+  value: 1 0 5 8 -2
+  accounted: 0 0 1 1 1
+  rank of A: 3 (rows approvals and accounted are equal)
+  target records 10, approvals 4, value 24, accounted 4: query 1, notice 5, alter 3, ack 1, demise 0
+PASS target 1 is soluble over the reals
+PASS target 1 has a whole, non-negative solution
+PASS approvals 4 with accounted 3 is insoluble: an approved act is always accounted
+PASS 4 approvals from 3 records is insoluble: no effect without a record
+== demise as a property of a trait
+PASS demise without a reason is refused
+PASS the trait is still active
+PASS demise with actor and reason is accepted
+  trait Change batch: demised at tick 1 by A. Rivera, reason: replaced by coalesced batches, successor: successor of Change batch, lifetime 1 ticks
+PASS a write after demise is refused
+PASS the demised trait keeps its last value
+PASS all three attempts are in the ledger, refused ones included
+== hireability (conduct evidence only)
+conduct evidence for A. Rivera (advisory; a person decides):
+  accepted acts: 4
+  refused attempts: 0
+  accounted acts: 4
+  consented exchanges: 1
+  reasoned declines: 1
+  recorded demises: 1
+  recent guard refusals: 0
+  advisory: Grade 4 evidence
+conduct evidence for B. Chen (advisory; a person decides):
+  accepted acts: 1
+  refused attempts: 4
+  accounted acts: 0
+  consented exchanges: 0
+  reasoned declines: 0
+  recorded demises: 0
+  recent guard refusals: 2
+  advisory: not yet Grade 3 evidence
+PASS A. Rivera shows Grade 4 evidence
+PASS B. Chen shows a recent refusal for a missing reason
+PASS a personal trait is not an evidence field
+== profit from the circuits
+prices (assumed units): logged +1, generated +2, change carried +5, refused -1, approval -20
+  medium: value 6723, cost -1275, profit 5448 (1089 per second)
+  professional: value 38820, cost -14817, profit 24003 (4800 per second)
+PASS professional earns more per second under these prices
+== ample and support parts, from signal amplitude
+  1 APML: mean 81/100 files per tick, peak 2, crest 246, utilization 40%, at capacity 24% of ticks -> support, saturated
+  2 Bloq: mean 81/100 files per tick, peak 2, crest 246, utilization 40%, at capacity 24% of ticks -> support, saturated
+  3 Bodi: mean 278/100 files per tick, peak 4, crest 143, utilization 69%, at capacity 54% of ticks -> ample, saturated
+  4 Sprung: mean 570/100 files per tick, peak 9, crest 157, utilization 57%, at capacity 0% of ticks -> ample, steady
+  5 Runyn: mean 293/100 files per tick, peak 5, crest 170, utilization 58%, at capacity 1% of ticks -> ample, steady
+  6 Falthruu: mean 43/100 files per tick, peak 4, crest 930, utilization 10%, at capacity 4% of ticks -> support, bursty
+PASS the design has ample parts
+PASS the design has support parts
+PASS every part is ample or support; none is idle
+  feedback: 1 proposal(s) from ample, saturated parts
+PASS an ample part at its limit leads to a design proposal
+PASS no support part is enlarged
+  Bodi: capacity 4 -> 5, avg wait 27 ms -> 16 ms, trait saturated -> saturated
+  profit 5448 -> 5448, less 400 for capacity: gain -400
+Tranchion (short study guide)
+  APML: support, saturated; goal: become steady; wisdom: a stanchion carries little current, but an ample part depends on the path through it
+  Bloq: support, saturated; goal: become steady; wisdom: a stanchion carries little current, but an ample part depends on the path through it
+  Bodi: ample, saturated; goal: become steady; wisdom: an ample part at its limit asks for design; trade: +1 capacity
+  Sprung: ample, steady; goal: stay steady; wisdom: an ample part with headroom needs watching, not change
+  Runyn: ample, steady; goal: stay steady; wisdom: an ample part with headroom needs watching, not change
+  Falthruu: support, bursty; goal: absorb bursts in the buffer; wisdom: a stanchion carries little current, but an ample part depends on the path through it
+  trade gain -400 units: refused, not a real action
+  rule: designs make ample parts; ample parts at their limit make the next design; support parts are kept sturdy
+PASS the redesigned circuit still conserves every file
+conduct: all 29 checks passed

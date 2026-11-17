@@ -1,0 +1,44 @@
+profile professional: 6000 files/s, 8 lane(s), tick 10 ms, 5 s simulated
+  capacity per lane per tick: APML 2, Bloq 2, Bodi 5, Sprung 12, Runyn 6, Falthruu 4; buffer 256
+  hard limits: lines 5000, width 400; header true, metadata true, generated mark true, dedupe true
+  soft limits: lines 1000, width 120, imports 40, members 50
+  Bloq fan-out 3; approvals 4/s, each covering up to 50 changes; coalesce window 50 ticks
+terminals (totals over 8 lane(s), 500 ticks):
+  1 APML: offered 3151, refused 1122, taken 2027 (405/s, 25% of capacity), waiting 2, peak queue 8, avg wait 4 ms, max wait 40 ms, warnings 0
+  2 Bloq: offered 2027, refused 0, taken 2023 (404/s, 25% of capacity), waiting 4, peak queue 2, avg wait 10 ms, max wait 10 ms, warnings 0
+  3 Bodi: offered 7804, refused 346, taken 7446 (1489/s, 37% of capacity), waiting 12, peak queue 13, avg wait 9 ms, max wait 30 ms, warnings 0
+  4 Sprung: offered 19824, refused 0, taken 19788 (3957/s, 41% of capacity), waiting 36, peak queue 11, avg wait 10 ms, max wait 10 ms, warnings 0
+  5 Runyn: offered 15141, refused 2763, taken 12378 (2475/s, 51% of capacity), waiting 0, peak queue 8, avg wait 0 ms, max wait 10 ms, warnings 0
+  6 Falthruu: offered 828, refused 0, taken 828 (165/s, 5% of capacity), waiting 0, peak queue 11, avg wait 33 ms, max wait 440 ms, warnings 0
+ground (refused before or at a strand), by reason:
+  out of scope: 7287
+  malformed: 594
+  missing header: 1946
+  too many lines: 179
+  too wide: 579
+  missing metadata: 722
+  generated without mark: 211
+  duplicate content: 901
+  binary content: 2058
+Runyn findings after consideration: 273 change requests raised, 5609 findings attached to an open request
+  long: 80
+  wide: 1601
+  many imports: 2414
+  many members: 1787
+balance: sourced 30000 + produced 7170 = sunk 19788 + consumed 2851 + grounded 14477 + waiting 54
+current: in 6000 files/s, logged by Sprung 3957 events/s, grounded 2895 files/s
+lane loads: 3749 3750 3760 3752 3732 3751 3749 3757
+approvals: 17 given across all lanes, covering 828 changes
+same stream through the medium circuit: 3000 files sourced; professional sourced 30000
+PASS sourced 6000 files/s for 5 s
+PASS professional carries at least 10x the medium current
+PASS Kirchhoff and conservation hold in all eight lanes
+PASS every duplicate was refused, and only duplicates
+PASS unmarked generated files are refused
+PASS no unmarked generated file was admitted
+PASS descriptions without metadata are refused
+PASS approvals stay within the shared human budget
+PASS no file is refused for a full buffer at 10x load
+PASS Runyn coalesced findings into open change requests
+PASS shard router keeps lane loads within 15 percent
+professional: all 11 checks passed

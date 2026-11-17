@@ -1,0 +1,63 @@
+APML modules: micro and macro messaging with the six strands
+-- micro: query and reply
+PASS query to APML accepted
+PASS module-A received an answer
+PASS answer is a REPLY
+PASS REPLY carries the query correlation id
+PASS REPLY body is the APML principle
+   APML principle: Structure comes first, and function follows from it.
+-- micro: ask each strand for its hand-off
+   APML hands off to Bloq
+   Bloq hands off to Bodi
+   Bodi hands off to Sprung
+   Sprung hands off to Runyn
+   Runyn hands off to Falthruu
+   Falthruu hands off to APML
+PASS six replies, one per strand
+-- micro: unknown topic
+PASS unknown topic is reported, not guessed
+-- micro: poll
+PASS poll on an empty mailbox returns -1
+PASS poll sees the waiting notice
+PASS poll leaves the mailbox unchanged
+PASS receive returns the polled envelope
+-- micro: interrupt
+PASS interrupt with actor and reason accepted
+PASS Bodi handled the interrupt before the earlier notice
+PASS desk counted, and did not act on, the interrupt
+-- guard: interrupt without a reason
+PASS interrupt without a reason is refused
+PASS refusal is counted
+PASS refused interrupt was not logged or delivered
+-- macro: broadcast to all strands
+PASS broadcast accepted
+PASS one correlation id spans six envelopes
+PASS every strand has exactly one waiting notice
+PASS broadcast without an actor is refused
+-- macro: co-exchange that commits
+PASS module-A offers to Runyn
+PASS Runyn counters
+PASS module-A acknowledges
+PASS exchange is committed
+PASS committed terms are the counter terms
+PASS OFFER is in the log
+PASS COUNTER is in the log
+PASS ACK is in the log
+PASS a committed exchange cannot be declined
+-- macro: co-exchange declined, and a wrong-party step
+PASS a non-party cannot counter
+PASS Falthruu declines
+PASS exchange is declined
+PASS a declined exchange cannot be acknowledged
+-- macro: co-exchange that expires
+PASS unanswered exchange expires after the tick limit
+PASS an expired exchange cannot continue
+-- backpressure: bounded mailbox
+PASS sixteen notices fit
+PASS the seventeenth is refused
+PASS the refusal is counted
+-- log
+PASS logical time strictly increases through the log
+   entries: 47, queries: 8, replies: 8, interrupts: 1
+PASS every query was answered
+modules: all 41 checks passed

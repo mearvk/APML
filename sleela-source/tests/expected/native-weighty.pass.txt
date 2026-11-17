@@ -1,0 +1,26 @@
+PASS the server reached tear down
+PASS the server was renewed as Vibrant
+PASS the weighty payload crossed a real socket
+PASS the host verified every frame
+PASS the host answered every request
+PASS the real lifecycle fit in 2000 ms
+PASS the host listener was closed by QUIT
+PASS the certificate was revoked at tear down
+PASS the host refused the bad frame
+PASS the frame was sent again
+PASS every frame verified after the resend
+PASS weighty send before build is refused
+PASS certify before serving is refused
+PASS nothing is accepted after tear down
+PASS the listener closed on tear down
+PASS a 120 MiB payload is not started
+PASS the server still ends inside 2000 ms
+PASS it is not called Vibrant
+PASS native servers scale up with demand
+PASS native servers scale down when demand falls
+PASS every native server built was torn down
+PASS every native server reached Vibrant
+PASS every real lifecycle fit in 2000 ms
+PASS no stage was refused in normal running
+PASS no certificate is left outstanding
+native weighty: all 25 checks passed

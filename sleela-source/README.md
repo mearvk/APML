@@ -24,6 +24,7 @@ sleela-source/
   user/                    User Class II: the MORAL.md statements enforced for one user
   sprung/                  Weighty: SocketServerNewton servers built, certified and torn down within 2 s,
                            simulated and over real TCP sockets
+  tests/                   regression tests: run-regression.sh, expected outputs, gate setup
   build.sh                 compiles and runs all eight programs
 ```
 
@@ -103,6 +104,10 @@ user: all 19 checks passed
 weighty: all 30 checks passed
 native weighty: all 25 checks passed
 ```
+
+## Regression tests
+
+`bash sleela-source/tests/run-regression.sh` builds and runs all eight programs and compares their output with `tests/expected/`. It sets up the execution gate itself if needed, and CI runs it on every change. See [`tests/README.md`](tests/README.md).
 
 ## Language notes
 

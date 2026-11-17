@@ -1,0 +1,34 @@
+profile medium: 600 files/s, 1 lane(s), tick 10 ms, 5 s simulated
+  capacity per lane per tick: APML 2, Bloq 2, Bodi 4, Sprung 10, Runyn 5, Falthruu 4; buffer 64
+  hard limits: lines 20000, width 1000; header false, metadata false, generated mark false, dedupe false
+  soft limits: lines 1500, width 160, imports 60, members 80
+  Bloq fan-out 3; approvals 2/s, each covering up to 25 changes; coalesce window 0 ticks
+terminals (totals over 1 lane(s), 500 ticks):
+  1 APML: offered 452, refused 43, taken 408 (81/s, 40% of capacity), waiting 1, peak queue 13, avg wait 14 ms, max wait 70 ms, warnings 70
+  2 Bloq: offered 408, refused 0, taken 406 (81/s, 40% of capacity), waiting 2, peak queue 2, avg wait 10 ms, max wait 10 ms, warnings 0
+  3 Bodi: offered 1407, refused 9, taken 1392 (278/s, 69% of capacity), waiting 6, peak queue 44, avg wait 27 ms, max wait 110 ms, warnings 27
+  4 Sprung: offered 2857, refused 0, taken 2854 (570/s, 57% of capacity), waiting 3, peak queue 9, avg wait 10 ms, max wait 10 ms, warnings 0
+  5 Runyn: offered 1548, refused 83, taken 1465 (293/s, 58% of capacity), waiting 0, peak queue 5, avg wait 0 ms, max wait 0 ms, warnings 170
+  6 Falthruu: offered 218, refused 0, taken 217 (43/s, 10% of capacity), waiting 1, peak queue 20, avg wait 84 ms, max wait 480 ms, warnings 0
+ground (refused before or at a strand), by reason:
+  out of scope: 749
+  malformed: 57
+  missing header: 25
+  too wide: 53
+  binary content: 211
+Runyn findings after consideration: 150 change requests raised, 0 findings attached to an open request
+  long: 31
+  wide: 8
+  many imports: 58
+  many members: 53
+balance: sourced 3000 + produced 1585 = sunk 2854 + consumed 623 + grounded 1095 + waiting 13
+current: in 600 files/s, logged by Sprung 570 events/s, grounded 219 files/s
+approvals: 9 given, covering 217 changes
+PASS sourced 600 files/s for 5 s
+PASS offered = refused + taken + waiting at every terminal
+PASS sourced + produced = sunk + consumed + grounded + waiting
+PASS buffer-full refusals happen only at the router entry
+PASS approvals stay within the human budget
+PASS Sprung logged events
+PASS medium admits unmarked generated files with a warning
+medium: all 7 checks passed
