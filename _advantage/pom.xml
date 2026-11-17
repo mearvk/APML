@@ -53,7 +53,11 @@
           <webResources>
             <resource><directory>html</directory><targetPath>html</targetPath></resource>
             <resource><directory>jsp</directory><targetPath>jsp</targetPath></resource>
-            <resource><directory>assumed-aliases</directory><targetPath>assumed-aliases</targetPath></resource>
+            <resource>
+              <directory>assumed-aliases</directory>
+              <targetPath>assumed-aliases</targetPath>
+              <excludes><exclude>screenshots/**</exclude></excludes>
+            </resource>
             <resource>
               <directory>servlets</directory>
               <targetPath>servlets</targetPath>
