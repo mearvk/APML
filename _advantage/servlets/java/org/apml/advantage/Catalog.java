@@ -14,6 +14,18 @@ public final class Catalog {
 
     public static final String API_VERSION = "v1";
 
+    /**
+     * Assumed legacy Wix slugs (analysis/APML-ANALYSIS.md section 5a). Assumption: the owner's page numbering
+     * follows the order of the original URL list. Unconfirmed; the owner should correct any that are wrong.
+     */
+    private static final Map<String, String> LEGACY_SLUGS = Map.of(
+        "apml", "copy-of-bodi-technology",
+        "bloq", "bloq-technology",
+        "bodi", "bodi-technology",
+        "sprung", "sprung-technology",
+        "runyn", "copy-of-bodi-technology-1",
+        "falthruu", "copy-of-runyn-technology");
+
     private final List<Technology> technologies;
     private final Map<String, Technology> bySlug;
     private final List<Term> terms;
@@ -96,5 +108,6 @@ public final class Catalog {
     public List<Technology> getTechnologies() { return technologies; }
     public Map<String, Technology> getBySlug() { return bySlug; }
     public List<Term> getTerms() { return terms; }
+    public String legacySlug(String slug) { return LEGACY_SLUGS.get(slug); }
     public Technology find(String slug) { return bySlug.get(slug); }
 }

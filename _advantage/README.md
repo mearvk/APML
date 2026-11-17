@@ -27,11 +27,29 @@ _advantage/
       SecurityHeadersFilter.java  CSP: same-origin only, no inline script or style
     WEB-INF/web.xml
     css/console.css  js/console.js
+  assumed-aliases/           static pages rendered by major subject (the six technologies)
+    index.html                 all subjects
+    apml/ bloq/ bodi/ sprung/ runyn/ falthruu/   one rendered page each
+    copy-of-bodi-technology/ bloq-technology/ bodi-technology/ sprung-technology/
+    copy-of-bodi-technology-1/ copy-of-runyn-technology/   assumed old Wix addresses, each redirects to its subject
+    css/site.css  js/site.js
   pom.xml                    assembles the three folders into advantage.war
 ```
 
 `site.css` in `html/` and `jsp/` and `console.css` in `servlets/` share the same color tokens
 (`:root` block). Change them in all three together.
+
+## Assumed aliases
+
+`assumed-aliases/` holds the site rendered by Major Subject, one page per technology. The six old Wix
+addresses are assumptions from `analysis/APML-ANALYSIS.md` section 5a. They hold only if the owner's page
+numbering follows the order of the original URL list, which is unconfirmed. Each old address redirects to its
+subject page, and `GET /api/v1/technologies/{slug}` reports it as `assumedAlias`.
+
+The pages are generated from `Catalog.java`. Regenerate after changing the catalog, from the repo root:
+
+    javac -d /tmp/aa _advantage/servlets/java/org/apml/advantage/{Technology,Term,Catalog,AliasRenderer}.java
+    java -cp /tmp/aa org.apml.advantage.AliasRenderer _advantage/assumed-aliases
 
 ## API (read-only, JSON)
 

@@ -115,6 +115,7 @@ public class ApiServlet extends HttpServlet {
         m.put("openItems", t.getOpenItems());
         m.put("handsOffTo", t.getHandsOffTo());
         m.put("pairedWith", t.getPairedWith());
+        m.put("assumedAlias", catalog().legacySlug(t.getSlug()));
         return m;
     }
 
