@@ -9,6 +9,13 @@
       var open = nav.classList.toggle("open");
       toggle.setAttribute("aria-expanded", String(open));
     });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && nav.classList.contains("open")) {
+        nav.classList.remove("open");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.focus();
+      }
+    });
   }
 
   // Button ripple (DHTML effect)
@@ -42,8 +49,12 @@
   // Social links from JSON (textContent only, no HTML injection)
   var list = document.getElementById("social-links");
   if (list && list.dataset.src) {
-    fetch(list.dataset.src).then(function (r) { return r.json(); }).then(function (data) {
-      data.links.forEach(function (l) {
+    fetch(list.dataset.src).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (data) {
+      (Array.isArray(data.links) ? data.links : []).forEach(function (l) {
+        if (!l || typeof l.name !== "string" || typeof l.url !== "string") return;
         if (!/^https:\/\//.test(l.url)) return;
         var li = document.createElement("li");
         var a = document.createElement("a");

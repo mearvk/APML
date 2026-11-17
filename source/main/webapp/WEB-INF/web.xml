@@ -6,6 +6,17 @@
 
   <display-name>APML</display-name>
 
+  <filter>
+    <filter-name>SecurityHeadersFilter</filter-name>
+    <filter-class>org.apml.web.SecurityHeadersFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>SecurityHeadersFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>ERROR</dispatcher>
+  </filter-mapping>
+
   <servlet>
     <servlet-name>PageServlet</servlet-name>
     <servlet-class>org.apml.web.PageServlet</servlet-class>
@@ -33,6 +44,19 @@
     <error-code>404</error-code>
     <location>/WEB-INF/jsp/pages/404.jsp</location>
   </error-page>
+
+  <error-page>
+    <location>/WEB-INF/jsp/pages/error.jsp</location>
+  </error-page>
+
+  <mime-mapping>
+    <extension>woff2</extension>
+    <mime-type>font/woff2</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>svg</extension>
+    <mime-type>image/svg+xml</mime-type>
+  </mime-mapping>
 
   <jsp-config>
     <jsp-property-group>

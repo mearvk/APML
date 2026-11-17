@@ -14,7 +14,9 @@ a { color: var(--accent); }
 .site-nav a { margin-left: 1.25rem; color: var(--muted); text-decoration: none; padding-bottom: 2px;
   border-bottom: 2px solid transparent; transition: color .2s, border-color .2s; }
 .site-nav a:hover, .site-nav a.active { color: var(--text); border-color: var(--accent); }
-.nav-toggle { display: none; }
+.nav-toggle { display: none; background: transparent; color: var(--text); border: 2px solid var(--accent);
+  border-radius: var(--radius); padding: .4rem .8rem; font: inherit; cursor: pointer; }
+.nav-toggle:focus-visible, a:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
 main { max-width: var(--max); margin: 0 auto; padding: 2rem 1.5rem; }
 .lead { font-size: 1.35rem; color: var(--muted); }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 1rem; }

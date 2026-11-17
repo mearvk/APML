@@ -22,8 +22,8 @@ public class RssServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-            resp.setContentType("application/rss+xml");
-            resp.setCharacterEncoding("UTF-8");
+            resp.setContentType("application/rss+xml;charset=UTF-8");
+            resp.setHeader("Cache-Control", "public, max-age=900");
             try (OutputStream out = resp.getOutputStream()) {
                 in.transferTo(out);
             }

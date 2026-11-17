@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><c:out value="${pageTitle}"/> | <c:out value="${site['site.title']}"/></title>
   <meta name="description" content="<c:out value='${site["site.tagline"]}'/>">
+  <link rel="icon" href="${pageContext.request.contextPath}/assets/images/favicon.svg" type="image/svg+xml">
   <link rel="alternate" type="application/rss+xml" title="APML RSS" href="${pageContext.request.contextPath}/rss.xml">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/fonts.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/site.css">
@@ -17,11 +18,12 @@
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="site-header">
   <a class="brand" href="${pageContext.request.contextPath}/page/home"><c:out value="${site['site.title']}"/></a>
-  <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+  <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
   <nav id="site-nav" class="site-nav" aria-label="Primary">
     <c:forEach var="p" items="${navPages}">
       <a href="${pageContext.request.contextPath}/page/${p.key}"
-         class="${p.key == pageName ? 'active' : ''}"><c:out value="${p.value}"/></a>
+         class="${p.key == pageName ? 'active' : ''}"
+         <c:if test="${p.key == pageName}">aria-current="page"</c:if>><c:out value="${p.value}"/></a>
     </c:forEach>
   </nav>
 </header>

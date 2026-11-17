@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page contentType="text/html;charset=UTF-8" session="false" %>
 <%@ include file="/WEB-INF/jsp/layout/header.jspf" %>
 <section class="page page-contact">
   <h1>Contact</h1>

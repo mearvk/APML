@@ -7,6 +7,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,18 +33,26 @@ public class PageServlet extends HttpServlet {
             if (in == null) {
                 throw new ServletException("WEB-INF/site.properties not found");
             }
-            site.load(in);
+            site.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+            for (String name : site.getProperty("pages", "home").split(",")) {
+                String key = name.trim();
+                if (!key.matches("[a-z0-9-]+")) {
+                    throw new ServletException("Invalid page name in site.properties: '" + key + "'");
+                }
+                if (getServletContext().getResource("/WEB-INF/jsp/pages/" + key + ".jsp") == null) {
+                    throw new ServletException("Registered page has no JSP: " + key);
+                }
+                pages.put(key, site.getProperty("page." + key + ".title", key));
+            }
         } catch (IOException e) {
             throw new ServletException(e);
         }
-        for (String name : site.getProperty("pages", "home").split(",")) {
-            String key = name.trim();
-            if (key.matches("[a-z0-9-]+")) {
-                pages.put(key, site.getProperty("page." + key + ".title", key));
-            }
+        if (!pages.containsKey("home")) {
+            throw new ServletException("site.properties must register the 'home' page");
         }
         getServletContext().setAttribute("site", site);
-        getServletContext().setAttribute("navPages", new ArrayList<>(pages.entrySet()));
+        getServletContext().setAttribute("navPages",
+                Collections.unmodifiableList(new ArrayList<>(pages.entrySet())));
     }
 
     @Override
@@ -57,9 +68,7 @@ public class PageServlet extends HttpServlet {
 
         req.setAttribute("pageName", name);
         req.setAttribute("pageTitle", pages.get(name));
-        resp.setHeader("X-Content-Type-Options", "nosniff");
-        resp.setHeader("X-Frame-Options", "SAMEORIGIN");
-        resp.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        resp.setHeader("Cache-Control", "no-cache");
         req.getRequestDispatcher("/WEB-INF/jsp/pages/" + name + ".jsp").forward(req, resp);
     }
 }
