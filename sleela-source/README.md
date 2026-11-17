@@ -24,8 +24,9 @@ sleela-source/
   user/                    User Class II: the MORAL.md statements enforced for one user
   sprung/                  Weighty: SocketServerNewton servers built, certified and torn down within 2 s,
                            simulated and over real TCP sockets
+  db/                      MySQL port for users and designations: schema, grants, connector, port
   tests/                   regression tests: run-regression.sh, expected outputs, gate setup
-  build.sh                 compiles and runs all eight programs
+  build.sh                 compiles and runs all nine programs
 ```
 
 ## What each strand file holds
@@ -103,11 +104,14 @@ conduct: all 29 checks passed
 user: all 19 checks passed
 weighty: all 30 checks passed
 native weighty: all 25 checks passed
+db port: all 47 checks passed
 ```
+
+`db/` is the MySQL port for users and designations; see [`db/README.md`](db/README.md).
 
 ## Regression tests
 
-`bash sleela-source/tests/run-regression.sh` builds and runs all eight programs and compares their output with `tests/expected/`. It sets up the execution gate itself if needed, and CI runs it on every change. See [`tests/README.md`](tests/README.md).
+`bash sleela-source/tests/run-regression.sh` builds and runs all nine programs and compares their output with `tests/expected/`. It sets up the execution gate itself if needed, and CI runs it on every change. See [`tests/README.md`](tests/README.md).
 
 ## Language notes
 

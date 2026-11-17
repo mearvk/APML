@@ -25,3 +25,5 @@ cd "$here"
 "$sleela" run build/weighty.sleela
 "$sleela" compile sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/Native*.sleela -o build/native-weighty.sleela
 "$sleela" run build/native-weighty.sleela
+"$sleela" compile db/*.sleela -o build/db.sleela
+"$sleela" run build/db.sleela

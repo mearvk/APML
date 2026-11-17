@@ -1,0 +1,192 @@
+#sleela 3.1
+<< ApmlUserDesignationPort: the port between APML users and designations and the
+   MySQL tables in db/schema.sql. It builds one statement per act and sends it
+   through ApmlDbConnector. A designation is a name granted to a user. It carries no
+   rank, level or privilege, which keeps MORAL.md statement 2.
+
+     MORAL.md 2  every write needs an actor and a reason, whoever asks
+     MORAL.md 3  history is append-only; revoke adds a row and edits nothing
+     MORAL.md 4  a refusal returns a code, and refusalName explains it
+     MORAL.md 7  closeUser clears the display name and keeps pseudonym and record
+     MORAL.md 8  this class stores no personal trait; only the owner-defined
+                 designation catalogue can say what a designation means
+
+   Result codes: 0 done, 1 actor missing, 2 reason missing, 3 bad pseudonym,
+   4 bad designation code, 5 link not open, 6 bad text, 7 bad argument,
+   9 statement journaled, adapter required, 10 database changed no row (user
+   closed or unknown, designation unknown, already held, or not held), 11 database error.
+
+   Statements are single INSERT or UPDATE commands, so each act is atomic. Two
+   concurrent issues of one designation may both insert; the view reads the latest
+   event per user and designation, so the outcome is still correct. >>
+class ApmlUserDesignationPort {
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 516;
+  String metaAuthor = "Drafted with Kiro at the request of Max Rupplin (mearvk)";
+  String metaDate = "2026-11-17";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-17";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+
+  ApmlDbConnector db = null;
+  ApmlSqlText text = new ApmlSqlText();
+
+  void begin(ApmlDbConnector c) {
+    db = c;
+  }
+
+  String refusalName(int code) {
+    String[] names = { "done", "actor missing", "reason missing", "pseudonym must be 3 to 64 of a-z, 0-9, hyphen",
+      "designation code must be 2 to 40 of a-z, 0-9, hyphen", "link not open", "text empty, too long or has control characters",
+      "bad argument", "unused", "statement journaled, adapter required",
+      "database changed no row: user closed or unknown, designation unknown, already held or not held",
+      "database error" };
+    if (code < 0) { return "unknown"; }
+    if (code > 11) { return "unknown"; }
+    return names[code];
+  }
+
+  boolean isSlug(String s, int minLen, int maxLen) { return text.isSlug(s, minLen, maxLen); }
+  boolean isText(String s, int maxLen) { return text.isText(s, maxLen); }
+
+  < Check actor and reason first, so a refusal always says which is missing. >
+  int checkWho(String actor, String why) {
+    if (actor == "") { return 1; }
+    if (why == "") { return 2; }
+    if (isText(actor, 64) == false) { return 6; }
+    if (isText(why, 255) == false) { return 6; }
+    return 0;
+  }
+
+  < Map the connector result of a write to a port code. >
+  int afterWrite(int rc) {
+    if (rc == 9) { return 9; }
+    if (rc == 5) { return 5; }
+    if (rc != 0) { return 11; }
+    if (db.lastAffected() == 0) { return 10; }
+    return 0;
+  }
+
+  int afterRead(int rc) {
+    if (rc == 0) { return 0; }
+    if (rc == 9) { return 9; }
+    if (rc == 5) { return 5; }
+    return 11;
+  }
+
+  < Open a user. The display name is optional text; use "" for none (stored as NULL). >
+  int addUser(String pseudonym, String displayName, String actor, String why) {
+    int w = checkWho(actor, why);
+    if (w != 0) { return w; }
+    if (isSlug(pseudonym, 3, 64) == false) { return 3; }
+    String shown = "NULL";
+    if (displayName != "") {
+      if (isText(displayName, 120) == false) { return 6; }
+      shown = db.quote(displayName);
+    }
+    String sql = "INSERT INTO users (pseudonym, display_name, opened_by, opened_reason) VALUES ("
+      + db.quote(pseudonym) + ", " + shown + ", " + db.quote(actor) + ", " + db.quote(why) + ")";
+    return afterWrite(db.execute(sql));
+  }
+
+  < Close a user: clear the display name, keep the pseudonym and the record. >
+  int closeUser(String pseudonym, String actor, String why) {
+    int w = checkWho(actor, why);
+    if (w != 0) { return w; }
+    if (isSlug(pseudonym, 3, 64) == false) { return 3; }
+    String sql = "UPDATE users SET display_name = NULL, closed_at = CURRENT_TIMESTAMP(3), closed_by = "
+      + db.quote(actor) + ", closed_reason = " + db.quote(why)
+      + " WHERE pseudonym = " + db.quote(pseudonym) + " AND closed_at IS NULL";
+    return afterWrite(db.execute(sql));
+  }
+
+  < Add a name to the designation catalogue. The owner decides what the catalogue holds. >
+  int defineDesignation(String code, String label, String actor, String why) {
+    int w = checkWho(actor, why);
+    if (w != 0) { return w; }
+    if (isSlug(code, 2, 40) == false) { return 4; }
+    if (isText(label, 120) == false) { return 6; }
+    String sql = "INSERT INTO designations (code, label, defined_by, defined_reason) VALUES ("
+      + db.quote(code) + ", " + db.quote(label) + ", " + db.quote(actor) + ", " + db.quote(why) + ")";
+    return afterWrite(db.execute(sql));
+  }
+
+  < Issue a designation to an open user who does not already hold it. >
+  int issueDesignation(String pseudonym, String code, String actor, String why) {
+    int w = checkWho(actor, why);
+    if (w != 0) { return w; }
+    if (isSlug(pseudonym, 3, 64) == false) { return 3; }
+    if (isSlug(code, 2, 40) == false) { return 4; }
+    String c = db.quote(code);
+    String sql = "INSERT INTO designation_issues (user_id, designation_code, kind, actor, reason) "
+      + "SELECT u.id, " + c + ", 'ISSUE', " + db.quote(actor) + ", " + db.quote(why)
+      + " FROM users u WHERE u.pseudonym = " + db.quote(pseudonym) + " AND u.closed_at IS NULL"
+      + " AND EXISTS (SELECT 1 FROM designations d WHERE d.code = " + c + ")"
+      + " AND NOT EXISTS (SELECT 1 FROM current_designations h WHERE h.user_id = u.id AND h.designation_code = " + c + ")";
+    return afterWrite(db.execute(sql));
+  }
+
+  < Revoke a held designation. A closed user may still have one revoked. The issue stays in history. >
+  int revokeDesignation(String pseudonym, String code, String actor, String why) {
+    int w = checkWho(actor, why);
+    if (w != 0) { return w; }
+    if (isSlug(pseudonym, 3, 64) == false) { return 3; }
+    if (isSlug(code, 2, 40) == false) { return 4; }
+    String c = db.quote(code);
+    String sql = "INSERT INTO designation_issues (user_id, designation_code, kind, actor, reason) "
+      + "SELECT u.id, " + c + ", 'REVOKE', " + db.quote(actor) + ", " + db.quote(why)
+      + " FROM users u WHERE u.pseudonym = " + db.quote(pseudonym)
+      + " AND EXISTS (SELECT 1 FROM current_designations h WHERE h.user_id = u.id AND h.designation_code = " + c + ")";
+    return afterWrite(db.execute(sql));
+  }
+
+  < Designations a user holds now. Reads need no actor. >
+  int designationsOf(String pseudonym) {
+    if (isSlug(pseudonym, 3, 64) == false) { return 3; }
+    String sql = "SELECT h.designation_code, d.label, h.issued_by, h.issue_reason, h.issued_at "
+      + "FROM current_designations h JOIN designations d ON d.code = h.designation_code "
+      + "JOIN users u ON u.id = h.user_id WHERE u.pseudonym = " + db.quote(pseudonym)
+      + " ORDER BY h.issued_at, h.designation_code";
+    return afterRead(db.query(sql));
+  }
+
+  < Every issue and revoke about a user, oldest first (MORAL.md 3: nothing hidden). >
+  int historyOf(String pseudonym) {
+    if (isSlug(pseudonym, 3, 64) == false) { return 3; }
+    String sql = "SELECT i.id, i.designation_code, i.kind, i.actor, i.reason, i.created_at "
+      + "FROM designation_issues i JOIN users u ON u.id = i.user_id WHERE u.pseudonym = "
+      + db.quote(pseudonym) + " ORDER BY i.id";
+    return afterRead(db.query(sql));
+  }
+}

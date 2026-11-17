@@ -1,0 +1,49 @@
+db port: connector, users and designations
+PASS connector: empty host is refused
+PASS connector: port above 65535 is refused
+PASS connector: open before configure is refused
+PASS connector: no secret flag, no open
+PASS connector: execute needs an open link
+PASS connector: open with a secret flag
+PASS connector: coordinate omits user and secret
+PASS connector: no adapter, so the statement is journaled and 9 is returned
+PASS connector: the statement is in the journal
+PASS connector: empty statement is refused
+PASS quote: single quote is escaped
+PASS quote: backslash is escaped
+PASS quote: double quote is escaped
+PASS quote: newline is escaped
+PASS quote: empty text is an empty literal
+PASS quote: non-ASCII text passes through unchanged
+PASS text: length counts characters, not bytes
+PASS 2: no actor, no write
+PASS 2: no reason, no write
+PASS bad pseudonym is refused
+PASS control characters in text are refused
+PASS bad designation code is refused
+PASS 4: a refusal can be explained
+PASS 4: an unknown code says unknown
+PASS refused acts send nothing to the database
+PASS dry run: a valid add is journaled and 9 returned
+PASS add user: exact statement, display name NULL when none
+PASS add user: a display name is quoted
+PASS define designation: exact statement
+PASS issue: writes an ISSUE row
+PASS issue: a closed user receives nothing
+PASS issue: a held designation is not issued twice
+PASS issue: the designation must be in the catalogue
+PASS revoke: writes a REVOKE row and edits nothing
+PASS revoke: only a held designation can be revoked
+PASS 7: close clears the display name and records who and why
+PASS read: designations are queried, adapter required
+PASS read: designations come from the current view
+PASS 3: the full history can be read
+PASS 3: history is oldest first
+PASS injection: a quote in a reason stays inside the literal
+PASS 3: the port never sends DELETE, TRUNCATE or DROP
+PASS loopback: one row changed is done
+PASS loopback: no row changed is refused with 10
+PASS 4: code 10 has an explanation
+PASS loopback: a database error is code 11
+PASS a closed link is code 5
+db port: all 47 checks passed

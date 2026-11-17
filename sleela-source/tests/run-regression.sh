@@ -39,6 +39,7 @@ tests=(
   "user|conduct/ConductLedger.sleela user/*.sleela|exact|60"
   "weighty|sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/SocketServerNewton.sleela sprung/SprungScaler.sleela sprung/WeightyDemo.sleela|exact|60"
   "native-weighty|sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/Native*.sleela|pass|120"
+  "db|db/*.sleela|exact|60"
 )
 
 # Drop toolchain chatter that is not program output.

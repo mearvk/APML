@@ -1,0 +1,146 @@
+#sleela 3.1
+<< ApmlSqlText: text checks and MySQL quoting shared by ApmlDbConnector and
+   ApmlUserDesignationPort.
+
+   It uses the VM string builtins (javaStringFromUtf8, javaStringLength,
+   javaStringCharAt, javaStringSubstring, javaStringToUtf8) and no String methods,
+   so it needs no java.lang library under /lib and compiles with the pinned gate of
+   tests/setup-gate.sh. Lengths and positions count UTF-16 code units. Quoting copies
+   unescaped runs whole, so multi-byte characters and surrogate pairs are never split. >>
+class ApmlSqlText {
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 514;
+  String metaAuthor = "Drafted with Kiro at the request of Max Rupplin (mearvk)";
+  String metaDate = "2026-11-17";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-17";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+
+
+  int len(String s) { return javaStringLength(javaStringFromUtf8(s)); }
+
+  << Quote a value as a MySQL string literal. Escapes NUL, newline, carriage return,
+     Ctrl-Z, double quote, single quote and backslash. >>
+  String quote(String s) {
+    String u = javaStringFromUtf8(s);
+    int n = javaStringLength(u);
+    String out = "'";
+    int start = 0;
+    int i = 0;
+    while (i < n) {
+      int c = javaStringCharAt(u, i);
+      String esc = "";
+      if (c == 0) { esc = "\\0"; }
+      if (c == 10) { esc = "\\n"; }
+      if (c == 13) { esc = "\\r"; }
+      if (c == 26) { esc = "\\Z"; }
+      if (c == 34) { esc = "\\\""; }
+      if (c == 39) { esc = "\\'"; }
+      if (c == 92) { esc = "\\\\"; }
+      if (esc != "") {
+        if (i > start) { out = out + javaStringToUtf8(javaStringSubstring(u, start, i)); }
+        out = out + esc;
+        start = i + 1;
+      }
+      i = i + 1;
+    }
+    if (n > start) { out = out + javaStringToUtf8(javaStringSubstring(u, start, n)); }
+    return out + "'";
+  }
+
+  < True when every character is a-z, 0-9 or hyphen and the length is within the bounds. >
+  boolean isSlug(String s, int minLen, int maxLen) {
+    String u = javaStringFromUtf8(s);
+    int n = javaStringLength(u);
+    if (n < minLen) { return false; }
+    if (n > maxLen) { return false; }
+    int i = 0;
+    while (i < n) {
+      int c = javaStringCharAt(u, i);
+      boolean good = false;
+      if (c >= 97) { if (c <= 122) { good = true; } }
+      if (c >= 48) { if (c <= 57) { good = true; } }
+      if (c == 45) { good = true; }
+      if (good == false) { return false; }
+      i = i + 1;
+    }
+    return true;
+  }
+
+  < True when the text is 1 to maxLen long with no control characters. >
+  boolean isText(String s, int maxLen) {
+    String u = javaStringFromUtf8(s);
+    int n = javaStringLength(u);
+    if (n < 1) { return false; }
+    if (n > maxLen) { return false; }
+    int i = 0;
+    while (i < n) {
+      int c = javaStringCharAt(u, i);
+      if (c < 32) { return false; }
+      if (c == 127) { return false; }
+      i = i + 1;
+    }
+    return true;
+  }
+
+  < True when part occurs in whole at position at. >
+  boolean matchAt(String w, String p, int at) {
+    int m = javaStringLength(p);
+    if (at + m > javaStringLength(w)) { return false; }
+    int j = 0;
+    while (j < m) {
+      int a = javaStringCharAt(w, at + j);
+      int b = javaStringCharAt(p, j);
+      if (a != b) { return false; }
+      j = j + 1;
+    }
+    return true;
+  }
+
+  boolean has(String whole, String part) {
+    String w = javaStringFromUtf8(whole);
+    String p = javaStringFromUtf8(part);
+    int last = javaStringLength(w) - javaStringLength(p);
+    int i = 0;
+    while (i <= last) {
+      if (matchAt(w, p, i)) { return true; }
+      i = i + 1;
+    }
+    return false;
+  }
+
+  boolean begins(String whole, String part) {
+    return matchAt(javaStringFromUtf8(whole), javaStringFromUtf8(part), 0);
+  }
+}

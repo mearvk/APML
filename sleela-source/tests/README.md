@@ -1,6 +1,6 @@
 # tests: regression tests for sleela-source
 
-`run-regression.sh` compiles and runs all eight programs in `sleela-source` and compares their output with the files in `expected/`.
+`run-regression.sh` compiles and runs all nine programs in `sleela-source` and compares their output with the files in `expected/`.
 
 ```
 bash sleela-source/tests/run-regression.sh             # run the tests
@@ -19,7 +19,7 @@ Then the output is compared with the expected file:
 
 | Program | Compared with | Why |
 |---|---|---|
-| knit, modules, medium, professional, conduct, user, weighty | `expected/<name>.txt`, line for line | These programs are deterministic: the same code gives the same output. Simulated times count as output. |
+| knit, modules, medium, professional, conduct, user, weighty, db | `expected/<name>.txt`, line for line | These programs are deterministic: the same code gives the same output. Simulated times count as output. |
 | native-weighty | `expected/native-weighty.pass.txt`, the PASS lines and the summary only | It runs over real TCP sockets in real time, so its counts and timings change from run to run. |
 
 The comparison catches changes that a program's own checks would not. For example, changing Bloq's fan-out from 3 to 4, or one profit price, leaves every built-in check passing. The diff against the expected file fails. Both cases were tried and caught.
@@ -47,7 +47,7 @@ Build outputs go to `tests/.build/`. Both `.gate/` and `.build/` are git-ignored
 
 The native test opens ports 48000 to 48999 on 127.0.0.1.
 
-## Result (2026-11-16)
+## Result (2026-11-17)
 
 ```
 ok   knit (knit: all checks passed)
@@ -58,5 +58,6 @@ ok   conduct (conduct: all 29 checks passed)
 ok   user (user: all 19 checks passed)
 ok   weighty (weighty: all 30 checks passed)
 ok   native-weighty (native weighty: all 25 checks passed)
-regression: all 8 passed
+ok   db (db port: all 47 checks passed)
+regression: all 9 passed
 ```

@@ -1,0 +1,172 @@
+#sleela 3.1
+<< DbPortDemo: checks the MySQL connector and the user and designation port with no
+   database. Statements are journaled by the connector and compared as text; the
+   loopback seam stands in for a database when the result mapping is checked.
+     sleela compile db/*.sleela -o build/db.sleela
+     sleela run build/db.sleela >>
+class DbPortDemo {
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 517;
+  String metaAuthor = "Drafted with Kiro at the request of Max Rupplin (mearvk)";
+  String metaDate = "2026-11-17";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-17";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+
+  int failures = 0;
+  int passes = 0;
+  ApmlSqlText t = new ApmlSqlText();
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  ApmlDbConnector freshLink() {
+    ApmlDbConnector c = new ApmlDbConnector();
+    c.configure("db.internal", 3306, "apml_app", true, "apml");
+    c.openLink();
+    return c;
+  }
+
+  void main() {
+    print("db port: connector, users and designations");
+
+    ApmlDbConnector c = new ApmlDbConnector();
+    expect(c.configure("", 3306, "apml_app", true, "apml") == 7, "connector: empty host is refused");
+    expect(c.configure("db.internal", 70000, "apml_app", true, "apml") == 7, "connector: port above 65535 is refused");
+    expect(c.openLink() == 7, "connector: open before configure is refused");
+    c.configure("db.internal", 3306, "apml_app", false, "apml");
+    expect(c.openLink() == 4, "connector: no secret flag, no open");
+    c.configure("db.internal", 3306, "apml_app", true, "apml");
+    expect(c.execute("SELECT 1") == 5, "connector: execute needs an open link");
+    expect(c.openLink() == 0, "connector: open with a secret flag");
+    expect(c.coordinate() == "mysql://db.internal:3306/apml", "connector: coordinate omits user and secret");
+    expect(c.execute("SELECT 1") == 9, "connector: no adapter, so the statement is journaled and 9 is returned");
+    expect(c.sentCount() == 1, "connector: the statement is in the journal");
+    expect(c.execute("") == 7, "connector: empty statement is refused");
+
+    expect(c.quote("a'b") == "'a\\'b'", "quote: single quote is escaped");
+    expect(c.quote("a\\b") == "'a\\\\b'", "quote: backslash is escaped");
+    expect(c.quote("a\"b") == "'a\\\"b'", "quote: double quote is escaped");
+    expect(c.quote("line1\nline2") == "'line1\\nline2'", "quote: newline is escaped");
+    expect(c.quote("") == "''", "quote: empty text is an empty literal");
+    expect(c.quote("Zoë 日本 😀") == "'Zoë 日本 😀'", "quote: non-ASCII text passes through unchanged");
+    expect(t.isText("Zoë", 3), "text: length counts characters, not bytes");
+
+    ApmlDbConnector k = freshLink();
+    ApmlUserDesignationPort p = new ApmlUserDesignationPort();
+    p.begin(k);
+
+    expect(p.addUser("user-7f3a", "Sam", "", "open account") == 1, "2: no actor, no write");
+    expect(p.addUser("user-7f3a", "Sam", "review board", "") == 2, "2: no reason, no write");
+    expect(p.addUser("Bad Name", "", "review board", "open account") == 3, "bad pseudonym is refused");
+    expect(p.addUser("user-7f3a", "Sam", "review board", "line1\nline2") == 6, "control characters in text are refused");
+    expect(p.issueDesignation("user-7f3a", "X", "review board", "good conduct") == 4, "bad designation code is refused");
+    expect(p.refusalName(1) == "actor missing", "4: a refusal can be explained");
+    expect(p.refusalName(99) == "unknown", "4: an unknown code says unknown");
+    expect(k.sentCount() == 0, "refused acts send nothing to the database");
+
+    int r = p.addUser("user-7f3a", "", "review board", "open account");
+    expect(r == 9, "dry run: a valid add is journaled and 9 returned");
+    expect(k.lastSent() == "INSERT INTO users (pseudonym, display_name, opened_by, opened_reason) VALUES ('user-7f3a', NULL, 'review board', 'open account')", "add user: exact statement, display name NULL when none");
+
+    p.addUser("user-7f3a", "Sam", "review board", "open account");
+    expect(t.has(k.lastSent(), "'Sam'"), "add user: a display name is quoted");
+
+    p.defineDesignation("approver", "Approver", "owner", "needed for Bodi changes");
+    expect(k.lastSent() == "INSERT INTO designations (code, label, defined_by, defined_reason) VALUES ('approver', 'Approver', 'owner', 'needed for Bodi changes')", "define designation: exact statement");
+
+    p.issueDesignation("user-7f3a", "approver", "review board", "Grade 4 evidence");
+    String issue = k.lastSent();
+    expect(t.has(issue, "'ISSUE'"), "issue: writes an ISSUE row");
+    expect(t.has(issue, "u.closed_at IS NULL"), "issue: a closed user receives nothing");
+    expect(t.has(issue, "NOT EXISTS (SELECT 1 FROM current_designations"), "issue: a held designation is not issued twice");
+    expect(t.has(issue, "EXISTS (SELECT 1 FROM designations d"), "issue: the designation must be in the catalogue");
+
+    p.revokeDesignation("user-7f3a", "approver", "review board", "role ended");
+    String rev = k.lastSent();
+    expect(t.has(rev, "'REVOKE'"), "revoke: writes a REVOKE row and edits nothing");
+    expect(t.has(rev, "EXISTS (SELECT 1 FROM current_designations"), "revoke: only a held designation can be revoked");
+
+    p.closeUser("user-7f3a", "review board", "user asked to leave");
+    expect(k.lastSent() == "UPDATE users SET display_name = NULL, closed_at = CURRENT_TIMESTAMP(3), closed_by = 'review board', closed_reason = 'user asked to leave' WHERE pseudonym = 'user-7f3a' AND closed_at IS NULL", "7: close clears the display name and records who and why");
+
+    expect(p.designationsOf("user-7f3a") == 9, "read: designations are queried, adapter required");
+    expect(t.has(k.lastSent(), "FROM current_designations h"), "read: designations come from the current view");
+    expect(p.historyOf("user-7f3a") == 9, "3: the full history can be read");
+    expect(t.has(k.lastSent(), "ORDER BY i.id"), "3: history is oldest first");
+
+    p.addUser("user-9z", "", "review board", "x'); DROP TABLE users; --");
+    expect(t.has(k.lastSent(), "'x\\'); DROP TABLE users; --'"), "injection: a quote in a reason stays inside the literal");
+
+    int i = 0;
+    boolean noDelete = true;
+    while (i < k.journalSize()) {
+      String s = k.sentAt(i);
+      if (t.begins(s, "DELETE")) { noDelete = false; }
+      if (t.begins(s, "TRUNCATE")) { noDelete = false; }
+      if (t.begins(s, "DROP")) { noDelete = false; }
+      i = i + 1;
+    }
+    expect(noDelete, "3: the port never sends DELETE, TRUNCATE or DROP");
+
+    ApmlDbConnector one = freshLink();
+    one.useLoopback(0, 1);
+    ApmlUserDesignationPort p1 = new ApmlUserDesignationPort();
+    p1.begin(one);
+    expect(p1.issueDesignation("user-7f3a", "approver", "review board", "evidence") == 0, "loopback: one row changed is done");
+
+    ApmlDbConnector none = freshLink();
+    none.useLoopback(0, 0);
+    ApmlUserDesignationPort p0 = new ApmlUserDesignationPort();
+    p0.begin(none);
+    expect(p0.issueDesignation("user-7f3a", "approver", "review board", "evidence") == 10, "loopback: no row changed is refused with 10");
+    expect(p0.refusalName(10) != "unknown", "4: code 10 has an explanation");
+
+    ApmlDbConnector bad = freshLink();
+    bad.useLoopback(1, 0);
+    ApmlUserDesignationPort pe = new ApmlUserDesignationPort();
+    pe.begin(bad);
+    expect(pe.closeUser("user-7f3a", "review board", "reason") == 11, "loopback: a database error is code 11");
+
+    ApmlDbConnector shut = new ApmlDbConnector();
+    ApmlUserDesignationPort ps = new ApmlUserDesignationPort();
+    ps.begin(shut);
+    expect(ps.addUser("user-7f3a", "", "review board", "open account") == 5, "a closed link is code 5");
+
+    if (failures == 0) { print("db port: all " + passes + " checks passed"); }
+    else { print("db port: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}

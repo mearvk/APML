@@ -1,0 +1,174 @@
+#sleela 3.1
+<< ApmlDbConnector: the MySQL connector of the APML sleela-source. It holds the
+   connection coordinates, checks every call, quotes values, and keeps a journal
+   of each statement it was asked to send.
+
+   Native bridge (documented, not dialed from here). A host adapter is expected to
+   map the calls to the SLeeLa MySQL ABI:
+     openLink -> slsql_open(host, port, user, secret, database)
+     execute  -> slsql_execute(handle, sql)
+     query    -> slsql_query(handle, sql, rowSink)
+     closeLink -> slsql_close(handle)
+   No adapter is attached, so execute and query journal the statement and return
+   9 (adapter required). Nothing is claimed to have reached a database.
+
+   The secret is never held here: secretPresent is a flag, and the adapter reads
+   the real secret from the keystore. The coordinate string omits user and secret.
+
+   Quoting assumes the default sql_mode (backslash escapes on, so not
+   NO_BACKSLASH_ESCAPES) and a utf8mb4 connection. The adapter text ABI has no
+   prepared statements, so every value goes through quote(). Identifiers are fixed
+   in ApmlUserDesignationPort and never come from callers.
+
+   Return codes: 0 ok, 4 unauthorized (no secret flag), 5 link not open,
+   7 invalid argument, 9 adapter required, 11 database error (loopback only). >>
+class ApmlDbConnector {
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 515;
+  String metaAuthor = "Drafted with Kiro at the request of Max Rupplin (mearvk)";
+  String metaDate = "2026-11-17";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-17";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+
+  String host = "";
+  int port = 3306;
+  String user = "";
+  boolean hasSecret = false;
+  String database = "";
+  boolean configured = false;
+  boolean linkOpen = false;
+  String[] journal = new String[64];
+  int journalCount = 0;
+  int journalOverflow = 0;
+  boolean loopback = false;
+  int loopbackStatus = 0;
+  int loopbackAffected = 0;
+  int affected = 0;
+  ApmlSqlText text = new ApmlSqlText();
+
+  < Set the coordinates. Port 3306 is the MySQL default. >
+  int configure(String h, int p, String u, boolean secretPresent, String db) {
+    if (h == "") { return 7; }
+    if (u == "") { return 7; }
+    if (db == "") { return 7; }
+    if (p < 1) { return 7; }
+    if (p > 65535) { return 7; }
+    host = h;
+    port = p;
+    user = u;
+    hasSecret = secretPresent;
+    database = db;
+    configured = true;
+    return 0;
+  }
+
+  int openLink() {
+    if (configured == false) { return 7; }
+    if (hasSecret == false) { return 4; }
+    linkOpen = true;
+    return 0;
+  }
+
+  int closeLink() {
+    linkOpen = false;
+    return 0;
+  }
+
+  boolean active() { return linkOpen; }
+
+  << Test seam, off by default. Makes execute return the given status and affected row count
+     instead of 9, so the port code that reads those results can be checked without a database. >>
+  void useLoopback(int status, int affectedRows) {
+    loopback = true;
+    loopbackStatus = status;
+    loopbackAffected = affectedRows;
+  }
+
+  void journalAdd(String sql) {
+    if (journalCount < 64) {
+      journal[journalCount] = sql;
+      journalCount = journalCount + 1;
+    } else {
+      journalOverflow = journalOverflow + 1;
+    }
+  }
+
+  int execute(String sql) {
+    if (linkOpen == false) { return 5; }
+    if (sql == "") { return 7; }
+    journalAdd(sql);
+    if (loopback) {
+      affected = loopbackAffected;
+      if (loopbackStatus != 0) { return 11; }
+      return 0;
+    }
+    affected = 0;
+    return 9;
+  }
+
+  int query(String sql) {
+    if (linkOpen == false) { return 5; }
+    if (sql == "") { return 7; }
+    journalAdd(sql);
+    if (loopback) {
+      if (loopbackStatus != 0) { return 11; }
+      return 0;
+    }
+    return 9;
+  }
+
+  int lastAffected() { return affected; }
+  int sentCount() { return journalCount + journalOverflow; }
+  int journalSize() { return journalCount; }
+
+  String sentAt(int i) {
+    if (i < 0) { return ""; }
+    if (i >= journalCount) { return ""; }
+    return journal[i];
+  }
+
+  String lastSent() {
+    if (journalCount == 0) { return ""; }
+    return journal[journalCount - 1];
+  }
+
+  < A log-safe coordinate string: never the user and never the secret. >
+  String coordinate() {
+    return "mysql://" + host + ":" + port + "/" + database;
+  }
+
+  < Quote a value as a MySQL string literal (see ApmlSqlText). >
+  String quote(String s) { return text.quote(s); }
+}
