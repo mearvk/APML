@@ -1,0 +1,67 @@
+#sleela 3.1
+<< ReasonCatalog: why a file was not taken. Every refusal in the circuit
+   carries one of these codes, so the ground current can always be explained.
+
+   0 admitted, 1 out of scope for this strand, 2 malformed, 3 missing header,
+   4 too many lines, 5 too wide, 6 missing metadata, 7 generated file without
+   a generated mark, 8 duplicate content, 9 buffer full, 10 binary content.
+
+   Findings are different from refusals. A finding is something Runyn notices
+   after it has read a file, and it raises a change request rather than
+   refusing the file: 1 long, 2 wide, 3 many imports, 4 many members. >>
+class ReasonCatalog {
+  int reasonCount() { return 11; }
+
+  String reasonName(int r) {
+    String[] a = { "admitted", "out of scope", "malformed", "missing header", "too many lines", "too wide", "missing metadata", "generated without mark", "duplicate content", "buffer full", "binary content" };
+    if (r < 0) { return "unknown"; }
+    if (r > 10) { return "unknown"; }
+    return a[r];
+  }
+
+  String findingName(int f) {
+    String[] a = { "none", "long", "wide", "many imports", "many members" };
+    if (f < 0) { return "unknown"; }
+    if (f > 4) { return "unknown"; }
+    return a[f];
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 209;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

@@ -1,0 +1,27 @@
+#sleela 3.1
+<< ApmlContract: strand 1 takes descriptions only, because every later strand
+   relies on the description being valid. >>
+class ApmlContract extends StageContract {
+  int strand() { return 1; }
+  String inputText() { return "APML descriptions (XML), from the stream or updated by Falthruu"; }
+  String whyText() { return "the description is the single source of truth, so it is validated before anything is built from it"; }
+  String beforeText() { return "kind is APML; well-formed; has a header; within hard lines and width; carries metadata when the profile requires it"; }
+  String afterText() { return "a validated description is handed to Bloq"; }
+
+  int admit(FileAnatomy a, CircuitProfile p) {
+    if (a.kind != 1) { return 1; }
+    if (a.wellFormed == false) { return 2; }
+    if (a.hasHeader == false) { return 3; }
+    int h = hardShape(a, p);
+    if (h != 0) { return h; }
+    if (p.requireMetadata) {
+      if (a.hasMetadata == false) { return 6; }
+    }
+    return 0;
+  }
+
+  boolean warn(FileAnatomy a, CircuitProfile p) {
+    if (a.hasMetadata == false) { return true; }
+    return false;
+  }
+}

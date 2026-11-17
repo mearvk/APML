@@ -1,0 +1,35 @@
+#sleela 3.1
+<< RunynContract: strand 5 reads hand-written code and reports drift. >>
+class RunynContract extends StageContract {
+  int strand() { return 5; }
+  String inputText() { return "hand-written Java source and tests"; }
+  String whyText() { return "hand-written code is where structure drifts from the description"; }
+  String beforeText() { return "kind is Java or test; well-formed; within hard limits; has a header when the profile requires it"; }
+  String afterText() { return "a refold report goes to Sprung; a file over any soft limit also raises a change request for Falthruu"; }
+
+  int admit(FileAnatomy a, CircuitProfile p) {
+    if (a.kind < 2) { return 1; }
+    if (a.kind > 3) { return 1; }
+    if (a.wellFormed == false) { return 2; }
+    int h = hardShape(a, p);
+    if (h != 0) { return h; }
+    if (p.requireHeader) {
+      if (a.hasHeader == false) { return 3; }
+    }
+    return 0;
+  }
+
+  boolean warn(FileAnatomy a, CircuitProfile p) {
+    if (a.hasHeader == false) { return true; }
+    return false;
+  }
+
+  < After consideration: the first soft limit broken, or 0. >
+  int finding(FileAnatomy a, CircuitProfile p) {
+    if (a.lines > p.softLines) { return 1; }
+    if (a.width > p.softWidth) { return 2; }
+    if (a.imports > p.softImports) { return 3; }
+    if (a.members > p.softMembers) { return 4; }
+    return 0;
+  }
+}

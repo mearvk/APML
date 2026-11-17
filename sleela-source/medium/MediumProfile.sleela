@@ -1,0 +1,75 @@
+#sleela 3.1
+<< MediumProfile: one lane at 600 files per second, about what a mid-sized
+   team produces during a full rebuild with generation. Limits are permissive:
+   files without a header or generated mark are admitted with a warning, and
+   duplicates are not detected. >>
+class MediumProfile {
+  CircuitProfile build() {
+    CircuitProfile p = new CircuitProfile();
+    p.name = "medium";
+    p.filesPerSecond = 600;
+    p.tickMs = 10;
+    p.ticks = 500;
+    p.lanes = 1;
+    p.setCapacity(1, 2);
+    p.setCapacity(2, 2);
+    p.setCapacity(3, 4);
+    p.setCapacity(4, 10);
+    p.setCapacity(5, 5);
+    p.setCapacity(6, 4);
+    p.buffer = 64;
+    p.bloqFanOut = 3;
+    p.approvalsPerSecond = 2;
+    p.approvalBatch = 25;
+    p.hardLines = 20000;
+    p.hardWidth = 1000;
+    p.softLines = 1500;
+    p.softWidth = 160;
+    p.softImports = 60;
+    p.softMembers = 80;
+    p.requireHeader = false;
+    p.requireMetadata = false;
+    p.requireGeneratedMark = false;
+    p.dedupe = false;
+    return p;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 213;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

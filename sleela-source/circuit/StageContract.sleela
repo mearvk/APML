@@ -1,0 +1,60 @@
+#sleela 3.1
+<< StageContract: the input contract of one strand. Subclasses say what the
+   strand takes as input and why, what must be true before it considers a file,
+   and what it guarantees after. admit returns 0 or a ReasonCatalog code. warn
+   returns true for a file that is admitted but should be looked at; a stricter
+   profile usually turns a warning into a refusal. >>
+class StageContract {
+  int strand() { return 0; }
+  String inputText() { return "nothing"; }
+  String whyText() { return "base contract"; }
+  String beforeText() { return "none"; }
+  String afterText() { return "none"; }
+  int admit(FileAnatomy a, CircuitProfile p) { return 1; }
+  boolean warn(FileAnatomy a, CircuitProfile p) { return false; }
+
+  int hardShape(FileAnatomy a, CircuitProfile p) {
+    if (a.lines > p.hardLines) { return 4; }
+    if (a.width > p.hardWidth) { return 5; }
+    return 0;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 212;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

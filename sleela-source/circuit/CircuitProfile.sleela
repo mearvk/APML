@@ -1,0 +1,88 @@
+#sleela 3.1
+<< CircuitProfile: every number that distinguishes one grade of circuit from
+   another. A profile is plain data; MediumProfile and ProfessionalProfile
+   build the two grades. Capacities are files per tick per lane.
+
+   Hard limits are checked before consideration: a file that breaks one is
+   refused. Soft limits are checked after consideration: a file that breaks one
+   is still processed, and Runyn raises a change request for it.
+
+   coalesceTicks, when above zero, makes Runyn raise at most one change request
+   per kind of finding per window in each lane; later findings of that kind in
+   the window are attached to the open request instead of raising a new one.
+   Zero turns coalescing off. >>
+class CircuitProfile {
+  String name = "unnamed";
+  int filesPerSecond = 0;
+  int tickMs = 10;
+  int ticks = 500;
+  int lanes = 1;
+  int[] capacity = new int[7];
+  int buffer = 64;
+  int bloqFanOut = 3;
+  int approvalsPerSecond = 2;
+  int approvalBatch = 5;
+  int coalesceTicks = 0;
+  int hardLines = 20000;
+  int hardWidth = 1000;
+  int softLines = 1500;
+  int softWidth = 160;
+  int softImports = 60;
+  int softMembers = 80;
+  boolean requireHeader = false;
+  boolean requireMetadata = false;
+  boolean requireGeneratedMark = false;
+  boolean dedupe = false;
+
+  void setCapacity(int strand, int perTick) { capacity[strand] = perTick; }
+  int capacityOf(int strand) { return capacity[strand]; }
+
+  int seconds() { return ticks * tickMs / 1000; }
+
+  void describe() {
+    print("profile " + name + ": " + filesPerSecond + " files/s, " + lanes + " lane(s), tick " + tickMs + " ms, " + seconds() + " s simulated");
+    print("  capacity per lane per tick: APML " + capacity[1] + ", Bloq " + capacity[2] + ", Bodi " + capacity[3] + ", Sprung " + capacity[4] + ", Runyn " + capacity[5] + ", Falthruu " + capacity[6] + "; buffer " + buffer);
+    print("  hard limits: lines " + hardLines + ", width " + hardWidth + "; header " + requireHeader + ", metadata " + requireMetadata + ", generated mark " + requireGeneratedMark + ", dedupe " + dedupe);
+    print("  soft limits: lines " + softLines + ", width " + softWidth + ", imports " + softImports + ", members " + softMembers);
+    print("  Bloq fan-out " + bloqFanOut + "; approvals " + approvalsPerSecond + "/s, each covering up to " + approvalBatch + " changes; coalesce window " + coalesceTicks + " ticks");
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 204;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

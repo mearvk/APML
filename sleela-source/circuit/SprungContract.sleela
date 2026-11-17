@@ -1,0 +1,11 @@
+#sleela 3.1
+<< SprungContract: strand 4 records events from the other strands. >>
+class SprungContract extends StageContract {
+  int strand() { return 4; }
+  String inputText() { return "address events from Bodi and refold reports from Runyn"; }
+  String whyText() { return "the log is the evidence later strands rely on, so it takes every event it is offered"; }
+  String beforeText() { return "the event came from Bodi or Runyn"; }
+  String afterText() { return "the event is appended to the log in arrival order and never edited"; }
+
+  int admit(FileAnatomy a, CircuitProfile p) { return 0; }
+}

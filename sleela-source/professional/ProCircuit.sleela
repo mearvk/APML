@@ -1,0 +1,129 @@
+#sleela 3.1
+<< ProCircuit: eight lanes of the six-terminal circuit behind one shard router.
+   A stream file goes to lane (hash of serial mod 8) + 1, and everything derived
+   from it stays in that lane. Three things are shared by all lanes, because
+   they must hold across the whole code base: the approval gate (people), the
+   dedupe set (content seen anywhere), and the serial source (unique ids). >>
+class ProCircuit {
+  CircuitProfile profile = null;
+  ApprovalGate gate = new ApprovalGate();
+  DedupeSet dedupe = new DedupeSet();
+  SerialSource serials = new SerialSource();
+  FileAnatomy hasher = new FileAnatomy();
+  Circuit l1 = new Circuit();
+  Circuit l2 = new Circuit();
+  Circuit l3 = new Circuit();
+  Circuit l4 = new Circuit();
+  Circuit l5 = new Circuit();
+  Circuit l6 = new Circuit();
+  Circuit l7 = new Circuit();
+  Circuit l8 = new Circuit();
+  int[] perLane = new int[9];
+
+  void setup(CircuitProfile p) {
+    profile = p;
+    gate.configure(p.approvalsPerSecond, p.approvalBatch, p.tickMs);
+    int i = 1;
+    while (i <= 8) {
+      Circuit c = lane(i);
+      c.setup(p, gate, dedupe, serials);
+      i = i + 1;
+    }
+  }
+
+  Circuit lane(int i) {
+    if (i == 1) { return l1; }
+    if (i == 2) { return l2; }
+    if (i == 3) { return l3; }
+    if (i == 4) { return l4; }
+    if (i == 5) { return l5; }
+    if (i == 6) { return l6; }
+    if (i == 7) { return l7; }
+    return l8;
+  }
+
+  int laneOf(int serial) { return hasher.draw(serial, 13) % 8 + 1; }
+
+  void inject(int serial) {
+    int i = laneOf(serial);
+    perLane[i] = perLane[i] + 1;
+    Circuit c = lane(i);
+    c.inject(serial * 10);
+  }
+
+  < Lanes are stepped in a different order each tick so no lane always gets the gate first. >
+  void step(int t) {
+    gate.tick();
+    int k = 0;
+    while (k < 8) {
+      int i = (t + k) % 8 + 1;
+      Circuit c = lane(i);
+      c.step();
+      k = k + 1;
+    }
+  }
+
+  int laneLoad(int i) { return perLane[i]; }
+
+  boolean allConserved() {
+    int i = 1;
+    while (i <= 8) {
+      Circuit c = lane(i);
+      if (c.conserved() == false) { return false; }
+      if (c.kirchhoffAll() == false) { return false; }
+      if (c.fullOnlyAtEntry() == false) { return false; }
+      i = i + 1;
+    }
+    return true;
+  }
+
+  int duplicatesSeen() {
+    int n = 0;
+    int i = 1;
+    while (i <= 8) {
+      Circuit c = lane(i);
+      n = n + c.router.duplicatesSeen();
+      i = i + 1;
+    }
+    return n;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 214;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

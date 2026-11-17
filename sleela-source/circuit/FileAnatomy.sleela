@@ -1,0 +1,205 @@
+#sleela 3.1
+<< FileAnatomy: the measured shape of one source file, derived
+   deterministically from its id so every run sees the same stream.
+
+   An id is serial * 10 + tag. Tag 0 is a file from the incoming stream. Tag 1
+   is a file Bloq generated, tag 2 a change request Runyn raised, tag 3 a
+   description Falthruu updated.
+
+   The square of a file is its bounding rectangle: lines by widest line, in
+   characters. area() is that product and fillPercent() is how much of the
+   rectangle holds bytes. A tall thin file and a short minified file can have
+   the same byte count and very different squares.
+
+   Kinds: 1 APML description (XML), 2 Java source, 3 Java test, 4 generated
+   Java, 5 build file, 6 document, 7 configuration, 8 change request, 9 binary.
+
+   The stream mix per 1000 files: APML 80, Java 380, test 140, generated 60,
+   build 30, document 120, configuration 100, change request 20, binary 70.
+   These figures are the drafter assumptions for an ordinary Java code base,
+   not measurements. >>
+class FileAnatomy {
+  int id = 0;
+  int serial = 0;
+  int tag = 0;
+  int kind = 0;
+  int lines = 0;
+  int width = 0;
+  int bytes = 0;
+  int imports = 0;
+  int types = 0;
+  int members = 0;
+  boolean wellFormed = true;
+  boolean hasHeader = true;
+  boolean hasMetadata = false;
+  boolean generatedMark = false;
+  boolean duplicate = false;
+  int contentKey = 0;
+
+  < A 31-bit mixing function; all products stay inside 64-bit integers. >
+  int mix(int x) {
+    int v = x % 2147483648;
+    if (v < 0) { v = 0 - v; }
+    int h = (v * 1103515245 + 12345) % 2147483648;
+    h = (h * 48271) % 2147483647;
+    return h;
+  }
+
+  int draw(int s, int k) { return mix(s * 16 + k); }
+
+  boolean isDup(int s) {
+    if (s <= 60) { return false; }
+    if (draw(s, 10) % 100 < 3) { return true; }
+    return false;
+  }
+
+  < Follow duplicate links back to the first file with this content. >
+  int canonicalKey(int s) {
+    int c = s;
+    while (isDup(c)) { c = c - 1 - (draw(c, 11) % 50); }
+    return c;
+  }
+
+  int streamKind(int s) {
+    int r = draw(s, 1) % 1000;
+    if (r < 80) { return 1; }
+    if (r < 460) { return 2; }
+    if (r < 600) { return 3; }
+    if (r < 660) { return 4; }
+    if (r < 690) { return 5; }
+    if (r < 810) { return 6; }
+    if (r < 910) { return 7; }
+    if (r < 930) { return 8; }
+    return 9;
+  }
+
+  void fill(int fileId) {
+    id = fileId;
+    tag = fileId % 10;
+    serial = fileId / 10;
+    int s = serial;
+    duplicate = false;
+    contentKey = fileId;
+    if (tag == 1) { fillGenerated(s); return; }
+    if (tag == 2) { fillSimple(s, 8, 5 + draw(s, 2) % 40); return; }
+    if (tag == 3) { fillSimple(s, 1, 20 + draw(s, 2) % 400); hasMetadata = true; return; }
+    kind = streamKind(s);
+    lines = 30 + draw(s, 2) % 700;
+    if (kind == 1) { lines = 20 + draw(s, 2) % 400; }
+    if (kind == 4) { lines = 50 + draw(s, 2) % 900; }
+    if (kind == 5) { lines = 40 + draw(s, 2) % 300; }
+    if (kind == 6) { lines = 10 + draw(s, 2) % 300; }
+    if (kind == 7) { lines = 5 + draw(s, 2) % 120; }
+    if (kind == 8) { lines = 5 + draw(s, 2) % 40; }
+    if (draw(s, 3) % 100 < 2) { lines = 2000 + draw(s, 2) % 8000; }
+    width = 60 + draw(s, 4) % 70;
+    if (draw(s, 4) % 100 < 3) { width = 300 + draw(s, 4) % 4000; }
+    imports = 0;
+    members = 0;
+    types = 0;
+    if (kind >= 2) {
+      if (kind <= 4) {
+        imports = draw(s, 5) % 50;
+        if (draw(s, 5) % 100 < 4) { imports = 60 + draw(s, 5) % 60; }
+        members = 3 + draw(s, 6) % 60;
+        if (draw(s, 6) % 100 < 4) { members = 80 + draw(s, 6) % 120; }
+        types = 1 + draw(s, 6) % 3;
+      }
+    }
+    wellFormed = draw(s, 7) % 100 >= 3;
+    hasHeader = draw(s, 8) % 100 < 88;
+    hasMetadata = draw(s, 9) % 100 < 50;
+    generatedMark = false;
+    if (kind == 4) { generatedMark = draw(s, 9) % 100 < 90; }
+    if (kind == 9) {
+      lines = 1;
+      width = 4096 + draw(s, 4) % 100000;
+      wellFormed = false;
+      hasHeader = false;
+    }
+    bytes = lines * width * (35 + draw(s, 12) % 36) / 100;
+    if (isDup(s)) { duplicate = true; }
+    contentKey = canonicalKey(s) * 10;
+  }
+
+  void fillGenerated(int s) {
+    kind = 4;
+    lines = 80 + draw(s, 2) % 600;
+    width = 70 + draw(s, 4) % 40;
+    imports = draw(s, 5) % 20;
+    members = 5 + draw(s, 6) % 30;
+    types = 1;
+    wellFormed = true;
+    hasHeader = true;
+    hasMetadata = true;
+    generatedMark = true;
+    bytes = lines * width / 2;
+  }
+
+  void fillSimple(int s, int k, int n) {
+    kind = k;
+    lines = n;
+    width = 60 + draw(s, 4) % 40;
+    imports = 0;
+    members = 0;
+    types = 0;
+    wellFormed = true;
+    hasHeader = true;
+    hasMetadata = false;
+    generatedMark = false;
+    bytes = lines * width / 2;
+  }
+
+  int area() { return lines * width; }
+
+  int fillPercent() {
+    if (area() == 0) { return 0; }
+    return bytes * 100 / area();
+  }
+
+  String kindName(int k) {
+    String[] a = { "none", "apml", "java", "test", "generated", "build", "doc", "config", "change", "binary" };
+    if (k < 0) { return "none"; }
+    if (k > 9) { return "none"; }
+    return a[k];
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 207;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

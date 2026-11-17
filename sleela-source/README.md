@@ -16,7 +16,10 @@ sleela-source/
   Strand6Falthruu.sleela   strand 6, Falthruu  the carrying through
   DesignKnit.sleela        checks that the six proposals fit together
   modules/                 how other modules poll, query, interrupt and exchange with the strands
-  build.sh                 compiles and runs both programs
+  circuit/                 the six strands as a circuit carrying files: shared classes and input contracts
+  medium/                  one lane at 600 files/s
+  professional/            eight lanes at 6000 files/s, stricter contracts
+  build.sh                 compiles and runs all four programs
 ```
 
 ## What each strand file holds
@@ -88,6 +91,8 @@ Result on 2026-11-16 with `sleela` 1.3.2-pro:
 ```
 knit: all checks passed
 modules: all 41 checks passed
+medium: all 7 checks passed
+professional: all 11 checks passed
 ```
 
 ## Language notes

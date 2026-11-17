@@ -1,0 +1,15 @@
+#sleela 3.1
+<< FalthruuContract: strand 6 carries approved changes back to the description. >>
+class FalthruuContract extends StageContract {
+  int strand() { return 6; }
+  String inputText() { return "change requests, from the stream or raised by Runyn"; }
+  String whyText() { return "a change that reaches the whole system must be one explicit, approved act"; }
+  String beforeText() { return "kind is change request and well-formed; a human approval is available before it is taken"; }
+  String afterText() { return "the change is consumed and an updated description goes back to APML"; }
+
+  int admit(FileAnatomy a, CircuitProfile p) {
+    if (a.kind != 8) { return 1; }
+    if (a.wellFormed == false) { return 2; }
+    return 0;
+  }
+}

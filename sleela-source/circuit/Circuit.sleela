@@ -1,0 +1,257 @@
+#sleela 3.1
+<< Circuit: one lane of the six-terminal circuit.
+
+   Circuit picture: a file is a unit of charge and files per second is the
+   current. Each strand is a terminal with a capacitor (its queue) and a
+   current limit (its capacity per tick). The router is the input terminal.
+   Ground takes every refused file, always with a reason. Sprung is the sink.
+
+   Edges:
+     router -> APML, Runyn, Bodi, Falthruu, or ground
+     APML -> Bloq            one to one
+     Bloq -> Bodi            one description in, fan-out generated files out
+     Bodi -> Sprung          one to one
+     Runyn -> Sprung         one report per file, plus a change request to
+                             Falthruu when a soft limit is broken (or the
+                             finding is attached to an open request when the
+                             profile coalesces)
+     Falthruu -> APML        one approved change in, one updated description out
+     Sprung -> sink
+
+   Backpressure: a strand takes a file only when the next strand has room for
+   everything it will emit, so derived files are never refused for space. Only
+   the router entry can refuse with buffer full.
+
+   Strands are stepped downstream first, so every hop costs at least one tick.
+
+   Conservation, checked at the end of the run:
+     sourced + produced = sunk + consumed + grounded + waiting >>
+class Circuit {
+  CircuitProfile profile = null;
+  FileAnatomy anatomy = new FileAnatomy();
+  Router router = new Router();
+  ApprovalGate gate = null;
+  DedupeSet dedupe = null;
+  SerialSource serials = null;
+  RunynContract runynRules = new RunynContract();
+  CircuitNode n1 = new CircuitNode();
+  CircuitNode n2 = new CircuitNode();
+  CircuitNode n3 = new CircuitNode();
+  CircuitNode n4 = new CircuitNode();
+  CircuitNode n5 = new CircuitNode();
+  CircuitNode n6 = new CircuitNode();
+  int tick = 0;
+  int sourced = 0;
+  int produced = 0;
+  int consumed = 0;
+  int shunted = 0;
+  int[] shuntedBy = new int[16];
+  int entryFull = 0;
+  int sunk = 0;
+  int[] findings = new int[5];
+  int changesRaised = 0;
+  int attached = 0;
+  int[] lastRaised = new int[5];
+
+  void setup(CircuitProfile p, ApprovalGate g, DedupeSet d, SerialSource s) {
+    profile = p;
+    gate = g;
+    dedupe = d;
+    serials = s;
+    n1.setup(1, "APML", new ApmlContract(), p.capacityOf(1), p.buffer);
+    n2.setup(2, "Bloq", new BloqContract(), p.capacityOf(2), p.buffer);
+    n3.setup(3, "Bodi", new BodiContract(), p.capacityOf(3), p.buffer);
+    n4.setup(4, "Sprung", new SprungContract(), p.capacityOf(4), p.buffer * 4);
+    n5.setup(5, "Runyn", new RunynContract(), p.capacityOf(5), p.buffer);
+    n6.setup(6, "Falthruu", new FalthruuContract(), p.capacityOf(6), p.buffer);
+  }
+
+  CircuitNode node(int n) {
+    if (n == 1) { return n1; }
+    if (n == 2) { return n2; }
+    if (n == 3) { return n3; }
+    if (n == 4) { return n4; }
+    if (n == 5) { return n5; }
+    return n6;
+  }
+
+  < A stream file arrives at the router. >
+  void inject(int id) {
+    sourced = sourced + 1;
+    anatomy.fill(id);
+    int to = router.route(anatomy, profile, dedupe);
+    if (to < 0) {
+      shunted = shunted + 1;
+      shuntedBy[0 - to] = shuntedBy[0 - to] + 1;
+      return;
+    }
+    CircuitNode n = node(to);
+    int r = n.offer(id, tick, anatomy, profile);
+    if (r == 9) { entryFull = entryFull + 1; }
+  }
+
+  < Offer a derived file to a strand. Room was checked before the take. >
+  void emit(int strand, int id) {
+    anatomy.fill(id);
+    CircuitNode n = node(strand);
+    n.offer(id, tick, anatomy, profile);
+  }
+
+  void step() {
+    n1.startTick();
+    n2.startTick();
+    n3.startTick();
+    n4.startTick();
+    n5.startTick();
+    n6.startTick();
+    while (n4.canTake()) {
+      n4.take(tick);
+      sunk = sunk + 1;
+    }
+    while (n3.canTake()) {
+      if (n4.free() < 1) { break; }
+      int id3 = n3.take(tick);
+      emit(4, id3);
+    }
+    while (n2.canTake()) {
+      if (n3.free() < profile.bloqFanOut) { break; }
+      n2.take(tick);
+      consumed = consumed + 1;
+      int k = 0;
+      while (k < profile.bloqFanOut) {
+        emit(3, serials.take() * 10 + 1);
+        produced = produced + 1;
+        k = k + 1;
+      }
+    }
+    while (n1.canTake()) {
+      if (n2.free() < 1) { break; }
+      int id1 = n1.take(tick);
+      emit(2, id1);
+    }
+    while (n6.canTake()) {
+      if (n1.free() < 1) { break; }
+      if (gate.available() == false) { break; }
+      gate.use();
+      n6.take(tick);
+      consumed = consumed + 1;
+      emit(1, serials.take() * 10 + 3);
+      produced = produced + 1;
+    }
+    while (n5.canTake()) {
+      if (n4.free() < 1) { break; }
+      if (n6.free() < 1) { break; }
+      int id5 = n5.take(tick);
+      anatomy.fill(id5);
+      int f = runynRules.finding(anatomy, profile);
+      emit(4, id5);
+      if (f > 0) {
+        findings[f] = findings[f] + 1;
+        if (coalesced(f)) {
+          attached = attached + 1;
+        } else {
+          lastRaised[f] = tick + 1;
+          changesRaised = changesRaised + 1;
+          emit(6, serials.take() * 10 + 2);
+          produced = produced + 1;
+        }
+      }
+    }
+    tick = tick + 1;
+  }
+
+  < True if an open change request of this finding kind is still inside its window. lastRaised holds tick plus one, so zero means never raised. >
+  boolean coalesced(int f) {
+    if (profile.coalesceTicks <= 0) { return false; }
+    if (lastRaised[f] == 0) { return false; }
+    if (tick + 1 - lastRaised[f] < profile.coalesceTicks) { return true; }
+    return false;
+  }
+
+  int grounded() {
+    int g = shunted;
+    int n = 1;
+    while (n <= 6) {
+      CircuitNode x = node(n);
+      g = g + x.refused;
+      n = n + 1;
+    }
+    return g;
+  }
+
+  int waitingAll() {
+    int w = 0;
+    int n = 1;
+    while (n <= 6) {
+      CircuitNode x = node(n);
+      w = w + x.waiting();
+      n = n + 1;
+    }
+    return w;
+  }
+
+  boolean conserved() {
+    return sourced + produced == sunk + consumed + grounded() + waitingAll();
+  }
+
+  boolean kirchhoffAll() {
+    int n = 1;
+    while (n <= 6) {
+      CircuitNode x = node(n);
+      if (x.kirchhoff() == false) { return false; }
+      n = n + 1;
+    }
+    return true;
+  }
+
+  < Buffer-full refusals happen only at the router entry. >
+  boolean fullOnlyAtEntry() {
+    int f = 0;
+    int n = 1;
+    while (n <= 6) {
+      CircuitNode x = node(n);
+      f = f + x.refusedFor(9);
+      n = n + 1;
+    }
+    return f == entryFull;
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 202;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

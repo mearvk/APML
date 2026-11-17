@@ -1,0 +1,167 @@
+#sleela 3.1
+<< CircuitReport: prints totals for one or more lanes. Add lanes with add, then
+   print. Averages are over all lanes. >>
+class CircuitReport {
+  ReasonCatalog reasons = new ReasonCatalog();
+  int[] offered = new int[7];
+  int[] admitted = new int[7];
+  int[] refused = new int[7];
+  int[] taken = new int[7];
+  int[] waiting = new int[7];
+  int[] peak = new int[7];
+  int[] waitSum = new int[7];
+  int[] waitMax = new int[7];
+  int[] warnings = new int[7];
+  int[] capacity = new int[7];
+  int[] refusedBy = new int[16];
+  int[] shuntedBy = new int[16];
+  int[] findings = new int[5];
+  int sourced = 0;
+  int produced = 0;
+  int consumed = 0;
+  int shunted = 0;
+  int sunk = 0;
+  int raised = 0;
+  int attached = 0;
+  int ticks = 0;
+  int lanes = 0;
+  int tickMs = 10;
+  String[] names = { "", "APML", "Bloq", "Bodi", "Sprung", "Runyn", "Falthruu" };
+
+  void add(Circuit c) {
+    lanes = lanes + 1;
+    ticks = c.tick;
+    tickMs = c.profile.tickMs;
+    sourced = sourced + c.sourced;
+    produced = produced + c.produced;
+    consumed = consumed + c.consumed;
+    shunted = shunted + c.shunted;
+    sunk = sunk + c.sunk;
+    raised = raised + c.changesRaised;
+    attached = attached + c.attached;
+    int n = 1;
+    while (n <= 6) {
+      CircuitNode x = c.node(n);
+      offered[n] = offered[n] + x.offered;
+      admitted[n] = admitted[n] + x.admitted;
+      refused[n] = refused[n] + x.refused;
+      taken[n] = taken[n] + x.taken;
+      waiting[n] = waiting[n] + x.waiting();
+      if (x.peak() > peak[n]) { peak[n] = x.peak(); }
+      waitSum[n] = waitSum[n] + x.waitSum;
+      if (x.waitMax > waitMax[n]) { waitMax[n] = x.waitMax; }
+      warnings[n] = warnings[n] + x.warnings;
+      capacity[n] = capacity[n] + x.capacity;
+      int r = 0;
+      while (r < 16) {
+        refusedBy[r] = refusedBy[r] + x.refusedFor(r);
+        r = r + 1;
+      }
+      n = n + 1;
+    }
+    int s = 0;
+    while (s < 16) {
+      shuntedBy[s] = shuntedBy[s] + c.shuntedBy[s];
+      s = s + 1;
+    }
+    int f = 0;
+    while (f < 5) {
+      findings[f] = findings[f] + c.findings[f];
+      f = f + 1;
+    }
+  }
+
+  int grounded() {
+    int g = shunted;
+    int n = 1;
+    while (n <= 6) {
+      g = g + refused[n];
+      n = n + 1;
+    }
+    return g;
+  }
+
+  int perSecond(int count) {
+    if (ticks == 0) { return 0; }
+    return count * 1000 / (ticks * tickMs);
+  }
+
+  void printAll() {
+    print("terminals (totals over " + lanes + " lane(s), " + ticks + " ticks):");
+    int n = 1;
+    while (n <= 6) {
+      int util = 0;
+      if (capacity[n] > 0) { util = taken[n] * 100 / (capacity[n] * ticks); }
+      int avgMs = 0;
+      if (taken[n] > 0) { avgMs = waitSum[n] * tickMs / taken[n]; }
+      print("  " + n + " " + names[n] + ": offered " + offered[n] + ", refused " + refused[n] + ", taken " + taken[n] + " (" + perSecond(taken[n]) + "/s, " + util + "% of capacity), waiting " + waiting[n] + ", peak queue " + peak[n] + ", avg wait " + avgMs + " ms, max wait " + (waitMax[n] * tickMs) + " ms, warnings " + warnings[n]);
+      n = n + 1;
+    }
+    print("ground (refused before or at a strand), by reason:");
+    int r = 1;
+    while (r <= 10) {
+      int c = refusedBy[r] + shuntedBy[r];
+      if (c > 0) { print("  " + reasons.reasonName(r) + ": " + c); }
+      r = r + 1;
+    }
+    print("Runyn findings after consideration: " + raised + " change requests raised, " + attached + " findings attached to an open request");
+    int f = 1;
+    while (f <= 4) {
+      print("  " + reasons.findingName(f) + ": " + findings[f]);
+      f = f + 1;
+    }
+    print("balance: sourced " + sourced + " + produced " + produced + " = sunk " + sunk + " + consumed " + consumed + " + grounded " + grounded() + " + waiting " + waitingTotal());
+    print("current: in " + perSecond(sourced) + " files/s, logged by Sprung " + perSecond(sunk) + " events/s, grounded " + perSecond(grounded()) + " files/s");
+  }
+
+  int waitingTotal() {
+    int w = 0;
+    int n = 1;
+    while (n <= 6) {
+      w = w + waiting[n];
+      n = n + 1;
+    }
+    return w;
+  }
+
+  int refusedFor(int r) { return refusedBy[r] + shuntedBy[r]; }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 205;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

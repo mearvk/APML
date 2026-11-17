@@ -1,0 +1,25 @@
+#sleela 3.1
+<< BodiContract: strand 3 gives an address to generated code. >>
+class BodiContract extends StageContract {
+  int strand() { return 3; }
+  String inputText() { return "generated Java, from Bloq or arriving in the stream"; }
+  String whyText() { return "an address is a promise that the code behind it is known; unmarked generated code has no known origin"; }
+  String beforeText() { return "kind is generated; well-formed; within hard limits; carries a generated mark when the profile requires it"; }
+  String afterText() { return "the file has an address and an address event goes to Sprung"; }
+
+  int admit(FileAnatomy a, CircuitProfile p) {
+    if (a.kind != 4) { return 1; }
+    if (a.wellFormed == false) { return 2; }
+    int h = hardShape(a, p);
+    if (h != 0) { return h; }
+    if (p.requireGeneratedMark) {
+      if (a.generatedMark == false) { return 7; }
+    }
+    return 0;
+  }
+
+  boolean warn(FileAnatomy a, CircuitProfile p) {
+    if (a.generatedMark == false) { return true; }
+    return false;
+  }
+}

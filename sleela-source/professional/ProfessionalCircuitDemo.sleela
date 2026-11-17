@@ -1,0 +1,97 @@
+#sleela 3.1
+<< ProfessionalCircuitDemo: runs the professional circuit for five simulated
+   seconds, then runs the medium circuit on the same stream for comparison.
+   Build from sleela-source:
+     sleela compile circuit/*.sleela medium/MediumProfile.sleela professional/*.sleela -o build/professional.sleela
+     sleela run build/professional.sleela >>
+class ProfessionalCircuitDemo {
+  int failures = 0;
+  int passes = 0;
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  < Same stream, one medium lane, for the comparison line. >
+  int mediumSourced() {
+    MediumProfile mp = new MediumProfile();
+    CircuitProfile p = mp.build();
+    ApprovalGate g = new ApprovalGate();
+    g.configure(p.approvalsPerSecond, p.approvalBatch, p.tickMs);
+    Circuit c = new Circuit();
+    c.setup(p, g, new DedupeSet(), new SerialSource());
+    int serial = 0;
+    int acc = 0;
+    int t = 0;
+    while (t < p.ticks) {
+      g.tick();
+      acc = acc + p.filesPerSecond * p.tickMs;
+      while (acc >= 1000) {
+        acc = acc - 1000;
+        serial = serial + 1;
+        c.inject(serial * 10);
+      }
+      c.step();
+      t = t + 1;
+    }
+    return c.sourced;
+  }
+
+  void main() {
+    ProfessionalProfile pp = new ProfessionalProfile();
+    CircuitProfile p = pp.build();
+    p.describe();
+    ProCircuit pc = new ProCircuit();
+    pc.setup(p);
+    int serial = 0;
+    int acc = 0;
+    int t = 0;
+    while (t < p.ticks) {
+      acc = acc + p.filesPerSecond * p.tickMs;
+      while (acc >= 1000) {
+        acc = acc - 1000;
+        serial = serial + 1;
+        pc.inject(serial);
+      }
+      pc.step(t);
+      t = t + 1;
+    }
+    CircuitReport r = new CircuitReport();
+    int i = 1;
+    while (i <= 8) {
+      r.add(pc.lane(i));
+      i = i + 1;
+    }
+    r.printAll();
+    String loads = "lane loads:";
+    int minL = 1000000;
+    int maxL = 0;
+    i = 1;
+    while (i <= 8) {
+      int l = pc.laneLoad(i);
+      loads = loads + " " + l;
+      if (l < minL) { minL = l; }
+      if (l > maxL) { maxL = l; }
+      i = i + 1;
+    }
+    print(loads);
+    ApprovalGate g = pc.gate;
+    print("approvals: " + g.approvalsGiven() + " given across all lanes, covering " + g.changesCovered() + " changes");
+    int med = mediumSourced();
+    print("same stream through the medium circuit: " + med + " files sourced; professional sourced " + r.sourced);
+    expect(r.sourced == p.filesPerSecond * p.seconds(), "sourced 6000 files/s for 5 s");
+    expect(r.sourced >= med * 10, "professional carries at least 10x the medium current");
+    expect(pc.allConserved(), "Kirchhoff and conservation hold in all eight lanes");
+    expect(r.refusedFor(8) == pc.duplicatesSeen(), "every duplicate was refused, and only duplicates");
+    expect(r.refusedFor(7) > 0, "unmarked generated files are refused");
+    expect(r.warnings[3] == 0, "no unmarked generated file was admitted");
+    expect(r.refusedFor(6) > 0, "descriptions without metadata are refused");
+    expect(g.approvalsGiven() <= p.approvalsPerSecond * p.seconds(), "approvals stay within the shared human budget");
+    expect(r.refusedFor(9) == 0, "no file is refused for a full buffer at 10x load");
+    expect(r.attached > 0, "Runyn coalesced findings into open change requests");
+    expect(maxL * 100 <= minL * 115, "shard router keeps lane loads within 15 percent");
+    if (failures == 0) { print("professional: all " + passes + " checks passed"); }
+    else { print("professional: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}

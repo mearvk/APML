@@ -13,3 +13,7 @@ cd "$here"
 "$sleela" run build/knit.sleela
 "$sleela" compile Strand*.sleela modules/*.sleela -o build/modules.sleela
 "$sleela" run build/modules.sleela
+"$sleela" compile circuit/*.sleela medium/*.sleela -o build/medium.sleela
+"$sleela" run build/medium.sleela
+"$sleela" compile circuit/*.sleela medium/MediumProfile.sleela professional/*.sleela -o build/professional.sleela
+"$sleela" run build/professional.sleela

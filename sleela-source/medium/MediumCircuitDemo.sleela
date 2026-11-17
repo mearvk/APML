@@ -1,0 +1,53 @@
+#sleela 3.1
+<< MediumCircuitDemo: runs the medium circuit for five simulated seconds and
+   checks it. Build from sleela-source:
+     sleela compile circuit/*.sleela medium/*.sleela -o build/medium.sleela
+     sleela run build/medium.sleela >>
+class MediumCircuitDemo {
+  int failures = 0;
+  int passes = 0;
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  void main() {
+    MediumProfile mp = new MediumProfile();
+    CircuitProfile p = mp.build();
+    p.describe();
+    ApprovalGate g = new ApprovalGate();
+    g.configure(p.approvalsPerSecond, p.approvalBatch, p.tickMs);
+    DedupeSet d = new DedupeSet();
+    SerialSource s = new SerialSource();
+    Circuit c = new Circuit();
+    c.setup(p, g, d, s);
+    int serial = 0;
+    int acc = 0;
+    int t = 0;
+    while (t < p.ticks) {
+      g.tick();
+      acc = acc + p.filesPerSecond * p.tickMs;
+      while (acc >= 1000) {
+        acc = acc - 1000;
+        serial = serial + 1;
+        c.inject(serial * 10);
+      }
+      c.step();
+      t = t + 1;
+    }
+    CircuitReport r = new CircuitReport();
+    r.add(c);
+    r.printAll();
+    print("approvals: " + g.approvalsGiven() + " given, covering " + g.changesCovered() + " changes");
+    expect(c.sourced == p.filesPerSecond * p.seconds(), "sourced 600 files/s for 5 s");
+    expect(c.kirchhoffAll(), "offered = refused + taken + waiting at every terminal");
+    expect(c.conserved(), "sourced + produced = sunk + consumed + grounded + waiting");
+    expect(c.fullOnlyAtEntry(), "buffer-full refusals happen only at the router entry");
+    expect(g.approvalsGiven() <= p.approvalsPerSecond * p.seconds(), "approvals stay within the human budget");
+    expect(c.n4.taken > 0, "Sprung logged events");
+    expect(c.node(3).warnings > 0, "medium admits unmarked generated files with a warning");
+    if (failures == 0) { print("medium: all " + passes + " checks passed"); }
+    else { print("medium: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}

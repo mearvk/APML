@@ -1,0 +1,87 @@
+#sleela 3.1
+<< FileQueue: a bounded ring of file ids with the tick each one arrived. In the
+   circuit picture this is the capacitor at a terminal: it absorbs bursts and
+   its charge is the number of waiting files. A full queue refuses, and the
+   refusal is counted by the node that owns it. >>
+class FileQueue {
+  int cap = 0;
+  int[] ids = new int[4096];
+  int[] ticks = new int[4096];
+  int head = 0;
+  int size = 0;
+  int peak = 0;
+  int lastTick = 0;
+
+  < Capacity is fixed once, up to 4096. >
+  void setCapacity(int c) {
+    cap = c;
+    if (cap > 4096) { cap = 4096; }
+    if (cap < 1) { cap = 1; }
+  }
+
+  int capacity() { return cap; }
+  int count() { return size; }
+  int free() { return cap - size; }
+  int peakCount() { return peak; }
+
+  boolean push(int id, int tick) {
+    if (size >= cap) { return false; }
+    int at = (head + size) % cap;
+    ids[at] = id;
+    ticks[at] = tick;
+    size = size + 1;
+    if (size > peak) { peak = size; }
+    return true;
+  }
+
+  < Remove and return the oldest id, or -1. The arrival tick is left in lastTick. >
+  int pop() {
+    if (size == 0) { return -1; }
+    int id = ids[head];
+    lastTick = ticks[head];
+    head = (head + 1) % cap;
+    size = size - 1;
+    return id;
+  }
+
+  int lastArrival() { return lastTick; }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 208;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}
