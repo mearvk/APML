@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.apml</groupId>
+  <artifactId>advantage</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <name>APML Advantage</name>
+  <description>API-centric site in JSP, Servlets and plain HTML</description>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <failOnMissingWebXml>false</failOnMissingWebXml>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet.jsp.jstl</groupId>
+      <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.web</groupId>
+      <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>advantage</finalName>
+    <!-- Source types stay in separate folders and are assembled into one WAR:
+           html/     -> /html/        (plain HTML, with css/ and js/)
+           jsp/      -> /jsp/         (JSP, with css/ and js/ and includes/)
+           servlets/ -> Java classes in WEB-INF/classes, css/ js/ -> /servlets/, WEB-INF/web.xml -> /WEB-INF/ -->
+    <sourceDirectory>servlets/java</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.4.0</version>
+        <configuration>
+          <webXml>servlets/WEB-INF/web.xml</webXml>
+          <webResources>
+            <resource><directory>html</directory><targetPath>html</targetPath></resource>
+            <resource><directory>jsp</directory><targetPath>jsp</targetPath></resource>
+            <resource>
+              <directory>servlets</directory>
+              <targetPath>servlets</targetPath>
+              <includes><include>css/**</include><include>js/**</include></includes>
+            </resource>
+          </webResources>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

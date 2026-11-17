@@ -1,0 +1,23 @@
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><c:out value="${pageTitle}"/> | APML Advantage</title>
+  <link rel="stylesheet" href="css/site.css">
+  <script defer src="js/site.js"></script>
+</head>
+<body data-api="${pageContext.request.contextPath}/api/v1">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <a class="brand" href="index.jsp">APML Advantage</a>
+  <button type="button" class="btn nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+  <nav id="site-nav" class="site-nav" aria-label="Primary">
+    <a href="index.jsp"<c:if test="${active == 'home'}"> aria-current="page"</c:if>>Home</a>
+    <a href="technologies.jsp"<c:if test="${active == 'technologies'}"> aria-current="page"</c:if>>Technologies</a>
+    <a href="terms.jsp"<c:if test="${active == 'terms'}"> aria-current="page"</c:if>>Terms</a>
+    <a href="api.jsp"<c:if test="${active == 'api'}"> aria-current="page"</c:if>>API</a>
+  </nav>
+</header>
+<main id="main">

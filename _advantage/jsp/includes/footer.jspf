@@ -1,0 +1,10 @@
+</main>
+<footer class="site-footer">
+  <p>APML: New Engaging Software for the Net Universe. <span id="health"></span></p>
+  <p>Same API, three front ends:
+    <a href="${pageContext.request.contextPath}/html/index.html">HTML</a> |
+    <a href="index.jsp">JSP</a> |
+    <a href="${pageContext.request.contextPath}/console">Servlet console</a></p>
+</footer>
+</body>
+</html>

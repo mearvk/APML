@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API | APML Advantage</title>
+  <link rel="stylesheet" href="css/site.css">
+  <script defer src="js/site.js"></script>
+</head>
+<body data-api="../api/v1">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <a class="brand" href="index.html">APML Advantage</a>
+  <button type="button" class="btn nav-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+  <nav id="site-nav" class="site-nav" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="technologies.html">Technologies</a>
+      <a href="terms.html">Terms</a>
+      <a href="api.html" aria-current="page">API</a>
+  </nav>
+</header>
+<main id="main">
+  <h1>API</h1>
+  <p class="lead">Every page on this site, in HTML, JSP and servlet form, reads the same read-only JSON API.</p>
+  <table>
+    <thead><tr><th scope="col">Method and path</th><th scope="col">Returns</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /api/v1</code></td><td>Index of resources</td></tr>
+      <tr><td><code>GET /api/v1/health</code></td><td>Liveness</td></tr>
+      <tr><td><code>GET /api/v1/technologies</code></td><td>The six strands, in order</td></tr>
+      <tr><td><code>GET /api/v1/technologies/{slug}</code></td><td>One strand: question, principle, owner claims, open items, hand-off</td></tr>
+      <tr><td><code>GET /api/v1/terms</code></td><td>Sprung terms awaiting formal definition</td></tr>
+      <tr><td><code>GET /api/v1/knit</code></td><td>The loop (hand-offs) and the fold (pairs 1-6, 2-5, 3-4)</td></tr>
+      <tr><td><code>GET /api/v1/openapi.json</code></td><td>OpenAPI 3.0 description</td></tr>
+    </tbody>
+  </table>
+  <p>Errors use one shape: <code>{"error":{"code":"not_found","message":"..."}}</code>. Other methods return 405.</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="../console">Open the console</a>
+    <a class="btn btn-ghost" href="../api/v1/openapi.json">OpenAPI JSON</a>
+  </div>
+</main>
+<footer class="site-footer">
+  <p>APML: New Engaging Software for the Net Universe. <span id="health"></span></p>
+  <p>Same API, three front ends:
+    <a href="index.html">HTML</a> |
+    <a href="../jsp/index.jsp">JSP</a> |
+    <a href="../console">Servlet console</a></p>
+</footer>
+</body>
+</html>
