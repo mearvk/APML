@@ -21,5 +21,7 @@ cd "$here"
 "$sleela" run build/conduct.sleela
 "$sleela" compile conduct/ConductLedger.sleela user/*.sleela -o build/user.sleela
 "$sleela" run build/user.sleela
-"$sleela" compile sprung/*.sleela -o build/weighty.sleela
+"$sleela" compile sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/SocketServerNewton.sleela sprung/SprungScaler.sleela sprung/WeightyDemo.sleela -o build/weighty.sleela
 "$sleela" run build/weighty.sleela
+"$sleela" compile sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/Native*.sleela -o build/native-weighty.sleela
+"$sleela" run build/native-weighty.sleela

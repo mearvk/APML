@@ -1,0 +1,355 @@
+#sleela 3.1
+<< NativeSocketServerNewton: the controller side of one native server. The
+   same nine stages as SocketServerNewton, each one done over a real TCP
+   connection to its NativeNewtonHost on 127.0.0.1:
+
+     1 built      the host listens on its port, or on the next free port
+                  if that one is still held by the operating system
+     2 served     one connection carries REQ messages, a batch of 10 per
+                  advance, until requestsPerServer are answered and sendMs of
+                  real time has passed
+     3 cycled     a new connection and a PING: the listener survives a
+                  drained connection
+     4 renewed    a new session key, confirmed with KEY?
+     5 certified  a certificate is issued and the host presents it on CERT?
+     6 weighty    the payload goes frame by frame; a NAKed frame is resent
+     7 recycled   payload state is dropped; a new connection and a PING
+     8 vibrant    the certificate is renewed and presented, and PING passes
+     9 torn down  QUIT closes the listener; the certificate is revoked
+
+   Times are real milliseconds from timeMonotonicNanos. Order, certificate
+   and budget rules match the simulated server. Certificates are still
+   modelled by NewtonCertificateAuthority; these sockets carry no TLS. >>
+class NativeSocketServerNewton {
+  int id = 0;
+  int port = 0;
+  WeightyProfile profile = null;
+  NewtonCertificateAuthority ca = null;
+  NativeFrames frames = null;
+  NativeNewtonHost host = new NativeNewtonHost();
+  int t0 = 0;
+  int stage = 0;
+  int startMs = 0;
+  int endMs = -1;
+  int certSerial = -1;
+  int key = 0;
+  int requestsServed = 0;
+  int serveK = -1;
+  int serveC = -1;
+  int serveStart = 0;
+  int framesResent = 0;
+  int portRetries = 0;
+  int corruptFrame = -1;
+  int weightyMs = 0;
+  boolean weightyDone = false;
+  boolean vibrant = false;
+  int refusals = 0;
+  String lastRefusal = "";
+  String tornReason = "";
+  int[] stageAt = new int[10];
+  boolean[] entered = new boolean[10];
+
+  void setup(int serverId, int tcpPort, WeightyProfile p, NewtonCertificateAuthority authority, NativeFrames fr, int clockStart) {
+    id = serverId;
+    port = tcpPort;
+    profile = p;
+    ca = authority;
+    frames = fr;
+    t0 = clockStart;
+  }
+
+  int nowMs() { return (timeMonotonicNanos() - t0) / 1000000; }
+
+  String stageName(int s) {
+    String[] a = { "none", "built", "served", "cycled", "renewed", "certified", "weighty", "recycled", "vibrant", "torn down" };
+    return a[s];
+  }
+
+  boolean refuse(String why) {
+    refusals = refusals + 1;
+    lastRefusal = why;
+    return false;
+  }
+
+  void enter(int s) {
+    stage = s;
+    stageAt[s] = nowMs();
+    entered[s] = true;
+  }
+
+  < One message from controller to host and its reply, on an open pair of sockets. >
+  String exchange(int k, int c, String m) {
+    sockwrite(k, m);
+    host.handle(c);
+    return sockread(k);
+  }
+
+  < Connect, run one exchange, say BYE, close both ends. >
+  String once(String m) {
+    int k = connect("127.0.0.1", port);
+    if (k < 0) { return ""; }
+    int c = host.acceptOne();
+    String r = exchange(k, c, m);
+    exchange(k, c, "BYE");
+    sockclose(k);
+    sockclose(c);
+    return r;
+  }
+
+  boolean build() {
+    if (stage != 0) { return refuse("build out of order"); }
+    startMs = nowMs();
+    < A port still in TIME_WAIT from an earlier run cannot be bound; move on through 48000 to 48999. >
+    while (host.open(port, frames) == false) {
+      if (portRetries >= 20) { return refuse("build: no free port near " + port); }
+      portRetries = portRetries + 1;
+      port = 48000 + (port - 48000 + 37) % 1000;
+    }
+    enter(1);
+    return true;
+  }
+
+  < Serve one batch. Returns true when the served stage is complete. >
+  boolean serveBatch() {
+    if (serveK < 0) {
+      serveK = connect("127.0.0.1", port);
+      if (serveK < 0) { return refuse("send data: cannot connect"); }
+      serveC = host.acceptOne();
+      serveStart = nowMs();
+    }
+    int i = 0;
+    while (i < 10) {
+      if (exchange(serveK, serveC, "REQ") == "RESP") { requestsServed = requestsServed + 1; }
+      i = i + 1;
+    }
+    if (requestsServed < profile.requestsPerServer) { return false; }
+    if (nowMs() - serveStart < profile.sendMs) { return false; }
+    exchange(serveK, serveC, "BYE");
+    sockclose(serveK);
+    sockclose(serveC);
+    serveK = -1;
+    serveC = -1;
+    enter(2);
+    return true;
+  }
+
+  boolean sendData() {
+    if (stage != 1) { return refuse("send data out of order: server is " + stageName(stage)); }
+    while (serveBatch() == false) {
+      if (refusals > 0) { return false; }
+    }
+    return true;
+  }
+
+  boolean cycle() {
+    if (stage != 2) { return refuse("cycle out of order: server is " + stageName(stage)); }
+    if (once("PING") != "PONG") { return refuse("cycle: no PONG"); }
+    enter(3);
+    return true;
+  }
+
+  boolean renew() {
+    if (stage != 3) { return refuse("renew out of order: server is " + stageName(stage)); }
+    key = (id * 7919 + nowMs()) % 1000003;
+    host.sessionKey = key;
+    if (once("KEY?") != "KEY " + key) { return refuse("renew: host did not take the key"); }
+    enter(4);
+    return true;
+  }
+
+  boolean certify() {
+    if (stage != 4) { return refuse("certify out of order: server is " + stageName(stage)); }
+    certSerial = ca.issue(id, nowMs(), profile.certValidMs);
+    host.cert = certSerial;
+    if (once("CERT?") != "CERT " + certSerial) { return refuse("certify: host does not present the certificate"); }
+    enter(5);
+    return true;
+  }
+
+  boolean sendWeighty() {
+    if (stage != 5) { return refuse("weighty send out of order: server is " + stageName(stage)); }
+    int chk = ca.check(certSerial, id, nowMs());
+    if (chk != 0) { return refuse("weighty send: certificate " + ca.checkName(chk)); }
+    int t = nowMs();
+    int k = connect("127.0.0.1", port);
+    if (k < 0) { return refuse("weighty send: cannot connect"); }
+    int c = host.acceptOne();
+    if (exchange(k, c, "W") != "READY") { sockclose(k); sockclose(c); return refuse("weighty send: host not ready"); }
+    int f = 0;
+    boolean corruptedOnce = false;
+    int naks = 0;
+    while (f < frames.frames) {
+      String frame = frames.frameText[f];
+      if (f == corruptFrame) {
+        if (corruptedOnce == false) { frame = frames.badFrame; corruptedOnce = true; }
+      }
+      sockwrite(k, frame);
+      host.receiveFrame(c, f);
+      String r = sockread(k);
+      if (r == "ACK") { f = f + 1; }
+      else {
+        framesResent = framesResent + 1;
+        naks = naks + 1;
+        if (naks > 8) { sockclose(k); sockclose(c); return refuse("weighty send: too many NAKs"); }
+      }
+    }
+    exchange(k, c, "BYE");
+    sockclose(k);
+    sockclose(c);
+    weightyMs = nowMs() - t;
+    weightyDone = true;
+    enter(6);
+    return true;
+  }
+
+  boolean recycle() {
+    if (stage != 6) { return refuse("recycle out of order: server is " + stageName(stage)); }
+    if (once("PING") != "PONG") { return refuse("recycle: no PONG"); }
+    enter(7);
+    return true;
+  }
+
+  boolean renewVibrant() {
+    if (stage != 7) { return refuse("renew as Vibrant out of order: server is " + stageName(stage)); }
+    certSerial = ca.renew(certSerial, id, nowMs(), profile.certValidMs);
+    host.cert = certSerial;
+    if (once("CERT?") != "CERT " + certSerial) { return refuse("renew as Vibrant: certificate not presented"); }
+    if (once("PING") != "PONG") { return refuse("renew as Vibrant: health check failed"); }
+    vibrant = true;
+    enter(8);
+    return true;
+  }
+
+  boolean tearDown(String why) {
+    if (stage == 0) { return refuse("tear down before build"); }
+    if (stage == 9) { return refuse("tear down twice"); }
+    if (serveK >= 0) { sockclose(serveK); sockclose(serveC); serveK = -1; serveC = -1; }
+    if (host.stopped == false) {
+      int k = connect("127.0.0.1", port);
+      if (k >= 0) {
+        int c = host.acceptOne();
+        exchange(k, c, "QUIT");
+        sockclose(k);
+        sockclose(c);
+      }
+    }
+    ca.revoke(certSerial);
+    tornReason = why;
+    enter(9);
+    endMs = stageAt[9];
+    return true;
+  }
+
+  int estimateMs(int s) {
+    if (s == 2) { return profile.sendMs; }
+    if (s == 6) { return profile.payloadBytes / profile.linkBytesPerMs; }
+    return 5;
+  }
+
+  < Move the lifecycle on by one step. In the served stage a step is one batch. >
+  void advance() {
+    if (stage == 9) { return; }
+    if (stage == 1) {
+      if (serveK >= 0) {
+        if (serveBatch() == false) {
+          if (refusals > 0) { tearDown("refused: " + lastRefusal); }
+        }
+        return;
+      }
+    }
+    int s = stage + 1;
+    if (s == 1) {
+      if (build() == false) { endMs = nowMs(); stage = 9; tornReason = "refused: " + lastRefusal; }
+      return;
+    }
+    if (s < 9) {
+      int elapsed = nowMs() - startMs;
+      if (elapsed + estimateMs(s) + estimateMs(9) > profile.budgetMs) {
+        tearDown("budget: " + stageName(s) + " would not fit");
+        return;
+      }
+    }
+    boolean ok = true;
+    if (s == 2) {
+      ok = serveBatch();
+      if (ok == false) {
+        if (refusals == 0) { return; }
+      }
+    }
+    if (s == 3) { ok = cycle(); }
+    if (s == 4) { ok = renew(); }
+    if (s == 5) { ok = certify(); }
+    if (s == 6) { ok = sendWeighty(); }
+    if (s == 7) { ok = recycle(); }
+    if (s == 8) { ok = renewVibrant(); }
+    if (s == 9) { ok = tearDown("lifecycle complete"); }
+    if (ok == false) {
+      if (stage != 9) { tearDown("refused: " + lastRefusal); }
+    }
+  }
+
+  boolean isDone() {
+    if (stage == 9) { return true; }
+    return false;
+  }
+
+  int lifetimeMs() {
+    if (endMs < 0) { return -1; }
+    return endMs - startMs;
+  }
+
+  int newton() {
+    if (weightyDone == false) { return 0; }
+    if (weightyMs <= 0) { return profile.payloadBytes; }
+    return profile.payloadBytes / weightyMs;
+  }
+
+  void printTimeline() {
+    String s = "  native server " + id + " on port " + port + ":";
+    int i = 1;
+    while (i <= 9) {
+      if (entered[i]) { s = s + " " + stageName(i) + "@" + (stageAt[i] - startMs); }
+      i = i + 1;
+    }
+    print(s + " ms; ended: " + tornReason);
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 533;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

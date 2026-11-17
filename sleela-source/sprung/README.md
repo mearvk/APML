@@ -2,7 +2,12 @@
 
 "Weighty" is the name for a Sprung framework that scales new SLeeLa servers. Each server, a `SocketServerNewton`, goes through a fixed lifecycle and is torn down, all within 2 seconds.
 
-**This is a simulation.** Time is simulated milliseconds, and sockets, bytes and certificates are modelled. No ports are opened and no real cryptography runs. A real deployment would use X.509 certificates over TLS 1.3 (RFC 8446), issued by a real certificate authority.
+There are two implementations of the same lifecycle:
+
+- **Simulated** (`SocketServerNewton`, `SprungScaler`, `WeightyDemo`). Time is simulated milliseconds, and sockets and bytes are modelled.
+- **Native** (`NativeSocketServerNewton`, `NativeNewtonHost`, `NativeFrames`, `NativeWeightyDemo`). It runs over real TCP sockets in the SLeeLa VM, using real wall-clock time. See [Native sockets](#native-sockets) below.
+
+In both, certificates are modelled by `NewtonCertificateAuthority` and no real cryptography runs. A real deployment would use X.509 certificates over TLS 1.3 (RFC 8446), issued by a real certificate authority.
 
 ## Lifecycle of one server
 
@@ -64,13 +69,85 @@ The default weighty payload is 4 MiB in 64 frames of 64 KiB, sent over a 50,000 
 Checks: `weighty: all 30 checks passed`.
 
 ```
-sleela compile sprung/*.sleela -o build/weighty.sleela
+sleela compile sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/SocketServerNewton.sleela sprung/SprungScaler.sleela sprung/WeightyDemo.sleela -o build/weighty.sleela
 sleela run build/weighty.sleela
 ```
 
+## Native sockets
+
+The SLeeLa VM already supports real TCP sockets. The `lib/net` classes such as `SLSocket` are stubs, but the language has built-in calls backed by `impl/core/sleela_net.c` (Linux, Windows and macOS):
+
+| Built-in | What it does |
+|---|---|
+| `listen(port)` | Opens a listener and returns a handle, or -1 |
+| `accept(h)` | Accepts a connection |
+| `connect(host, port)` | Opens a connection |
+| `sockread(h)` | Reads up to 4,096 bytes as a String; "" at end of stream |
+| `sockwrite(h, s)` | Writes a String and returns the bytes written |
+| `sockclose(h)` | Closes a handle |
+
+There are also `spawn`, `join`, `lock` and `unlock` for threads, and `timeMonotonicNanos` for a real clock. All were checked in the sandbox with `sleela` 1.3.2-pro.
+
+### How the native version works
+
+- `NativeNewtonHost` owns a real listener on 127.0.0.1 and answers one message at a time: PING, REQ, KEY?, CERT?, W, BYE, QUIT.
+- `NativeSocketServerNewton` drives the nine stages over real connections:
+  - The served stage keeps one connection open and serves requests for 200 ms of real time.
+  - The weighty stage sends 64 frames of 64 KiB, and each frame must be acknowledged before the next.
+  - Tear-down sends QUIT, which closes the listener, and revokes the certificate.
+- **Frame check.** The host checks each frame's exact length and its 16-character trailing token. This is not a checksum over every byte.
+- **Ports.** A port still held by the operating system from an earlier run (TIME_WAIT) can't be reopened. The server moves to the next free port in the range 48000 to 48999.
+
+### Result (2026-11-16, real time)
+
+**One server:** built at 0 ms, served at 200 ms, weighty at 230 ms, torn down at 230 ms.
+- It answered 13,920 requests over TCP. The 40 in the profile is a minimum; the served stage runs for its full 200 ms.
+- It sent 4 MiB in 30 ms, a Newton figure of 139,810 bytes/ms.
+
+**Scaling over 6 s of real time,** with demand at 200 requests/s, then 2,400, then 400:
+
+| Time | Live servers |
+|---|---:|
+| 1 s | 1 |
+| 3 s | 12 (the peak) |
+| 5 s | 2 |
+
+| Total | Value |
+|---|---:|
+| Servers built, torn down and Vibrant | 85, 85, 85 |
+| Longest real lifecycle | 528 ms |
+| Requests over TCP | 256,620 |
+| Weighty bytes over TCP | 356,515,840 |
+| Average Newton figure | 147,692 bytes/ms |
+| Certificates issued | 170, none left outstanding |
+| Port retries | 15 |
+
+**Edge cases:**
+- A corrupted frame was refused by the host and sent again.
+- A 120 MiB payload was not started because it could not finish in time.
+- Steps taken out of order were refused.
+
+Checks: `native weighty: all 25 checks passed`. This was repeated over three back-to-back runs.
+
+```
+sleela compile sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/Native*.sleela -o build/native-weighty.sleela
+sleela run build/native-weighty.sleela
+```
+
+### Why the native version uses one thread
+
+The first native version ran each host on its own VM thread (`spawn`). It hung after two or three 4 MiB payloads.
+
+At the hang, `/proc` showed the main thread waiting on a futex and the host thread blocked in `recvfrom`. In `impl/core/sleela_core.c`, `OP_SOCKREAD` holds the socket's mutex for the whole blocking read. Small reproductions with threads did not hang, so the exact cause is not yet found.
+
+The native version therefore runs each host and its controller on one thread, as a single-threaded reactor: write, then the host reads and replies, then read. The kernel socket buffers carry the bytes between the two ends. Several servers run at once by taking turns.
+
+**One VM behaviour to know about:** `OP_SOCKREAD` passes every chunk it reads to the VM string intern table, which is never freed. Received data that keeps changing makes memory grow for the life of the process. A long-running server would need a VM change, such as a read that returns a buffer that is not interned.
+
 ## Open items
 
-- Real sockets. The `lib/net` classes in SLeeLa, such as `SLSocket`, are stubs for now, so a real server needs a native bridge.
+- A threaded host. This needs the VM read-blocking issue above found and fixed.
+- A non-interned socket read in the VM, for long-running servers.
 - A real certificate authority and TLS.
-- Measured stage times to replace the assumed ones.
+- Measured stage times for the simulated profile. The native run gives real ones: about 200 ms serving, 30 ms per 4 MiB payload, and a few ms for each other stage.
 - How Weighty connects to the Sprung message log, and to your still-undefined "Voltage on Time" score for weighty messages.

@@ -1,6 +1,6 @@
 #sleela 3.1
 << WeightyDemo: checks the Weighty framework.
-     sleela compile sprung/*.sleela -o build/weighty.sleela
+     sleela compile sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/SocketServerNewton.sleela sprung/SprungScaler.sleela sprung/WeightyDemo.sleela -o build/weighty.sleela
      sleela run build/weighty.sleela >>
 class WeightyDemo {
   int failures = 0;

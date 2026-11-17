@@ -1,0 +1,94 @@
+#sleela 3.1
+<< NativeFrames: the weighty payload, built once. Each frame is frameBytes
+   long: a body of a repeating 16-character pattern, then a 16-character
+   token for the frame number. badFrame has the right length and a wrong
+   token, for testing. Building frames once keeps large allocations out of
+   the send loop. >>
+class NativeFrames {
+  int frameBytes = 65536;
+  int frames = 64;
+  String body = "";
+  String[] tokens = new String[1024];
+  String[] frameText = new String[1024];
+  String badFrame = "";
+
+  int textLength(String s) {
+    if (s == null) { return 0; }
+    return javaStringLength(javaStringFromUtf8(s));
+  }
+
+  String lastChars(String s, int n) {
+    String js = javaStringFromUtf8(s);
+    int len = javaStringLength(js);
+    if (len <= n) { return s; }
+    return javaStringToUtf8(javaStringSubstring(js, len - n, len));
+  }
+
+  String token(int f) {
+    String d = "" + (100000 + f);
+    while (textLength(d) < 15) { d = "0" + d; }
+    return "T" + d;
+  }
+
+  void build(int fb, int fr) {
+    frameBytes = fb;
+    frames = fr;
+    if (frames > 1024) { frames = 1024; }
+    String unit = "abcdefghijklmnop";
+    String acc = "";
+    String block = unit;
+    int c = (fb - 16) / 16;
+    while (c > 0) {
+      if (c % 2 == 1) { acc = acc + block; }
+      block = block + block;
+      c = c / 2;
+    }
+    body = acc;
+    int f = 0;
+    while (f < frames) {
+      tokens[f] = token(f);
+      frameText[f] = body + tokens[f];
+      f = f + 1;
+    }
+    badFrame = body + "XXXXXXXXXXXXXXXX";
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 531;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}

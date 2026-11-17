@@ -1,0 +1,197 @@
+#sleela 3.1
+<< NativeWeightyDemo: runs the Weighty lifecycle over real TCP sockets on
+   127.0.0.1, then scales native servers to demand in real time. Ports from
+   48000 must be free.
+     sleela compile sprung/WeightyProfile.sleela sprung/NewtonCertificateAuthority.sleela sprung/Native*.sleela -o build/native-weighty.sleela
+     sleela run build/native-weighty.sleela >>
+class NativeWeightyDemo {
+  int failures = 0;
+  int passes = 0;
+  int clock = 0;
+  int nextId = 0;
+  NativeFrames frames = new NativeFrames();
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  NativeSocketServerNewton make(WeightyProfile p, NewtonCertificateAuthority ca) {
+    nextId = nextId + 1;
+    NativeSocketServerNewton s = new NativeSocketServerNewton();
+    s.setup(nextId, 48000 + nextId % 1000, p, ca, frames, clock);
+    return s;
+  }
+
+  void runToEnd(NativeSocketServerNewton s) {
+    int guard = 0;
+    while (s.isDone() == false) {
+      s.advance();
+      guard = guard + 1;
+      if (guard > 100000) { return; }
+    }
+  }
+
+  void oneServer(WeightyProfile p, NewtonCertificateAuthority ca) {
+    print("== one native server");
+    NativeSocketServerNewton s = make(p, ca);
+    runToEnd(s);
+    s.printTimeline();
+    NativeNewtonHost h = s.host;
+    print("  requests over TCP " + s.requestsServed + " (host answered " + h.requests + "); frames verified by host " + h.framesOk + "; weighty " + s.weightyMs + " ms, Newton " + s.newton() + " bytes/ms");
+    expect(s.isDone(), "the server reached tear down");
+    expect(s.vibrant, "the server was renewed as Vibrant");
+    expect(s.weightyDone, "the weighty payload crossed a real socket");
+    expect(h.framesOk == frames.frames, "the host verified every frame");
+    expect(h.requests == s.requestsServed, "the host answered every request");
+    expect(s.lifetimeMs() <= p.budgetMs, "the real lifecycle fit in 2000 ms");
+    expect(h.stopped, "the host listener was closed by QUIT");
+    expect(ca.check(s.certSerial, s.id, s.endMs) == 5, "the certificate was revoked at tear down");
+  }
+
+  void corrupted(WeightyProfile p, NewtonCertificateAuthority ca) {
+    print("== a corrupted frame over a real socket");
+    NativeSocketServerNewton s = make(p, ca);
+    s.corruptFrame = 9;
+    runToEnd(s);
+    NativeNewtonHost h = s.host;
+    print("  resent " + s.framesResent + ", host NAKs " + h.framesBad + ", host ACKs " + h.framesOk);
+    expect(h.framesBad == 1, "the host refused the bad frame");
+    expect(s.framesResent == 1, "the frame was sent again");
+    expect(h.framesOk == frames.frames, "every frame verified after the resend");
+  }
+
+  void orderRules(WeightyProfile p, NewtonCertificateAuthority ca) {
+    print("== order rules on a native server");
+    NativeSocketServerNewton s = make(p, ca);
+    expect(s.sendWeighty() == false, "weighty send before build is refused");
+    s.build();
+    expect(s.certify() == false, "certify before serving is refused");
+    print("  last refusal: " + s.lastRefusal);
+    s.tearDown("test");
+    expect(s.sendData() == false, "nothing is accepted after tear down");
+    NativeNewtonHost h = s.host;
+    expect(h.stopped, "the listener closed on tear down");
+  }
+
+  void budget(NewtonCertificateAuthority ca) {
+    print("== a payload too heavy for the budget");
+    WeightyProfile p = new WeightyProfile();
+    p.payloadBytes = 125829120;
+    NativeSocketServerNewton s = make(p, ca);
+    runToEnd(s);
+    s.printTimeline();
+    expect(s.weightyDone == false, "a 120 MiB payload is not started");
+    expect(s.lifetimeMs() <= p.budgetMs, "the server still ends inside 2000 ms");
+    expect(s.vibrant == false, "it is not called Vibrant");
+  }
+
+  int demandAt(int ms) {
+    if (ms < 1500) { return 200; }
+    if (ms < 4000) { return 2400; }
+    if (ms < 6000) { return 400; }
+    return 0;
+  }
+
+  void scaling(WeightyProfile p, NewtonCertificateAuthority ca) {
+    print("== native scaling over 6 s of real time: 200, then 2400, then 400 requests/s");
+    NativeSocketServerNewton[] live = new NativeSocketServerNewton[16];
+    int perServer = p.requestsPerServer * 1000 / p.sendMs;
+    int spawned = 0;
+    int torn = 0;
+    int vibrantCount = 0;
+    int maxLive = 0;
+    int maxLife = 0;
+    int requests = 0;
+    int weightyBytes = 0;
+    int newtonSum = 0;
+    int refusals = 0;
+    int retries = 0;
+    String firstRefusal = "";
+    int liveAt1 = -1;
+    int liveAt3 = -1;
+    int liveAt5 = -1;
+    int issued0 = ca.issuedCount;
+    int start = (timeMonotonicNanos() - clock) / 1000000;
+    boolean running = true;
+    while (running) {
+      int now = (timeMonotonicNanos() - clock) / 1000000 - start;
+      boolean accepting = now < 6000;
+      int count = 0;
+      int i = 0;
+      while (i < 16) {
+        if (live[i] != null) {
+          NativeSocketServerNewton s = live[i];
+          s.advance();
+          if (s.isDone()) {
+            torn = torn + 1;
+            if (s.vibrant) { vibrantCount = vibrantCount + 1; }
+            if (s.lifetimeMs() > maxLife) { maxLife = s.lifetimeMs(); }
+            requests = requests + s.requestsServed;
+            if (s.weightyDone) { weightyBytes = weightyBytes + p.payloadBytes; }
+            newtonSum = newtonSum + s.newton();
+            refusals = refusals + s.refusals;
+            retries = retries + s.portRetries;
+            if (s.refusals > 0) { if (firstRefusal == "") { firstRefusal = s.lastRefusal; } }
+            live[i] = null;
+          } else {
+            count = count + 1;
+          }
+        }
+        i = i + 1;
+      }
+      int target = 0;
+      if (accepting) { target = (demandAt(now) + perServer - 1) / perServer; }
+      if (target > 16) { target = 16; }
+      i = 0;
+      while (i < 16) {
+        if (count < target) {
+          if (live[i] == null) {
+            NativeSocketServerNewton n = make(p, ca);
+            n.advance();
+            live[i] = n;
+            spawned = spawned + 1;
+            count = count + 1;
+          }
+        }
+        i = i + 1;
+      }
+      if (count > maxLive) { maxLive = count; }
+      if (now >= 1000) { if (liveAt1 < 0) { liveAt1 = count; } }
+      if (now >= 3000) { if (liveAt3 < 0) { liveAt3 = count; } }
+      if (now >= 5000) { if (liveAt5 < 0) { liveAt5 = count; } }
+      if (accepting == false) {
+        if (count == 0) { running = false; }
+      }
+    }
+    int avgN = 0;
+    if (torn > 0) { avgN = newtonSum / torn; }
+    print("  live servers at 1 s: " + liveAt1 + ", at 3 s: " + liveAt3 + ", at 5 s: " + liveAt5 + "; peak " + maxLive);
+    print("  spawned " + spawned + ", torn down " + torn + ", Vibrant " + vibrantCount + ", longest real lifecycle " + maxLife + " ms");
+    print("  requests over TCP " + requests + ", weighty bytes over TCP " + weightyBytes + ", average Newton " + avgN + " bytes/ms; port retries " + retries);
+    print("  certificates issued " + (ca.issuedCount - issued0) + " in this run; outstanding overall " + ca.outstanding());
+    if (firstRefusal != "") { print("  first refusal: " + firstRefusal); }
+    expect(liveAt3 > liveAt1, "native servers scale up with demand");
+    expect(liveAt5 < liveAt3, "native servers scale down when demand falls");
+    expect(spawned == torn, "every native server built was torn down");
+    expect(vibrantCount == torn, "every native server reached Vibrant");
+    expect(maxLife <= p.budgetMs, "every real lifecycle fit in 2000 ms");
+    expect(refusals == 0, "no stage was refused in normal running");
+    expect(ca.outstanding() == 0, "no certificate is left outstanding");
+  }
+
+  void main() {
+    print("Native Weighty: SocketServerNewton over real TCP sockets");
+    clock = timeMonotonicNanos();
+    WeightyProfile p = new WeightyProfile();
+    frames.build(p.frameBytes, p.frames());
+    NewtonCertificateAuthority ca = new NewtonCertificateAuthority();
+    oneServer(p, ca);
+    corrupted(p, ca);
+    orderRules(p, ca);
+    budget(ca);
+    scaling(p, ca);
+    if (failures == 0) { print("native weighty: all " + passes + " checks passed"); }
+    else { print("native weighty: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}

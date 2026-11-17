@@ -1,0 +1,134 @@
+#sleela 3.1
+<< NativeNewtonHost: the server side of one native SocketServerNewton. It
+   owns a real TCP listener (SLeeLa builtins listen, accept, sockread,
+   sockwrite, sockclose, backed by impl/core/sleela_net.c) and answers one
+   message at a time.
+
+   It runs on the same VM thread as its controller, as a single-threaded
+   reactor: the controller writes a message, the host reads and replies,
+   the controller reads the reply. The kernel socket buffers carry the bytes
+   between the two ends. A version with one VM thread per host (spawn) hung:
+   after a few payloads the main thread waited on a mutex while the host
+   thread sat in a socket read. The cause in the VM is not yet found, so the
+   threaded form is not used.
+
+   Protocol, one message and one reply:
+     PING -> PONG          REQ -> RESP          KEY? -> KEY n
+     CERT? -> CERT n       BYE -> BYE           QUIT -> QUIT (listener closes)
+     W -> READY, then each frame is answered ACK when its length and token
+          match, NAK otherwise
+   The frame check covers the exact length and the trailing token, not a
+   checksum of every byte. >>
+class NativeNewtonHost {
+  NativeFrames frames = null;
+  int port = 0;
+  int listener = -1;
+  int cert = -1;
+  int sessionKey = 0;
+  int requests = 0;
+  int framesOk = 0;
+  int framesBad = 0;
+  int messages = 0;
+  boolean stopped = false;
+
+  boolean open(int p, NativeFrames fr) {
+    port = p;
+    frames = fr;
+    listener = listen(p);
+    if (listener < 0) { return false; }
+    return true;
+  }
+
+  int acceptOne() { return accept(listener); }
+
+  < Read one message from c and answer it. Returns false when the connection should close. >
+  boolean handle(int c) {
+    String m = sockread(c);
+    messages = messages + 1;
+    if (frames.textLength(m) == 0) { return false; }
+    if (m == "PING") { sockwrite(c, "PONG"); return true; }
+    if (m == "REQ") { requests = requests + 1; sockwrite(c, "RESP"); return true; }
+    if (m == "KEY?") { sockwrite(c, "KEY " + sessionKey); return true; }
+    if (m == "CERT?") { sockwrite(c, "CERT " + cert); return true; }
+    if (m == "W") { sockwrite(c, "READY"); return true; }
+    if (m == "BYE") { sockwrite(c, "BYE"); return false; }
+    if (m == "QUIT") {
+      sockwrite(c, "QUIT");
+      sockclose(listener);
+      listener = -1;
+      stopped = true;
+      return false;
+    }
+    sockwrite(c, "ERR");
+    return true;
+  }
+
+  < Read one whole frame and answer ACK or NAK. >
+  void receiveFrame(int c, int f) {
+    int got = 0;
+    String prev = "";
+    String last = "";
+    int lastLen = 0;
+    while (got < frames.frameBytes) {
+      String s = sockread(c);
+      int n = frames.textLength(s);
+      if (n == 0) { framesBad = framesBad + 1; return; }
+      got = got + n;
+      prev = last;
+      last = s;
+      lastLen = n;
+    }
+    String end = last;
+    if (lastLen < 16) { end = prev + last; }
+    boolean ok = false;
+    if (got == frames.frameBytes) {
+      if (frames.lastChars(end, 16) == frames.tokens[f]) { ok = true; }
+    }
+    if (ok) {
+      framesOk = framesOk + 1;
+      sockwrite(c, "ACK");
+    } else {
+      framesBad = framesBad + 1;
+      sockwrite(c, "NAK");
+    }
+  }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 532;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}
