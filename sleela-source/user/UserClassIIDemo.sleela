@@ -1,0 +1,50 @@
+#sleela 3.1
+<< UserClassIIDemo: checks each moral statement of MORAL.md for one user.
+     sleela compile conduct/ConductLedger.sleela user/*.sleela -o build/user.sleela
+     sleela run build/user.sleela >>
+class UserClassIIDemo {
+  int failures = 0;
+  int passes = 0;
+
+  void expect(boolean ok, String what) {
+    if (ok) { print("PASS " + what); passes = passes + 1; }
+    else { print("FAIL " + what); failures = failures + 1; }
+  }
+
+  void main() {
+    print("User Class II: the moral statements, enforced for one user");
+    ConductLedger l = new ConductLedger();
+    UserClassII u = new UserClassII();
+    u.begin("user-7f3a", "Sam", l);
+    expect(u.actOn("Bodi operator", "repoint profile service") == false, "5: nobody acts on the user before consent");
+    u.consent();
+    expect(u.actOn("Bodi operator", "repoint profile service"), "5: with consent, an attributed act is accepted");
+    expect(u.actOn("Bodi operator", "") == false, "1, 2: an act without a reason is refused, whoever asks");
+    u.decide(true, "accept weekly refold");
+    u.decide(false, "");
+    expect(u.claim("decisions refused") == "1", "1: the user may refuse without giving a reason");
+    expect(u.refuseUser("Runyn", 0) == false, "4: turning the user away without a reason code is not allowed");
+    expect(u.refuseUser("Runyn", 3), "4: turning the user away with a reason code is recorded");
+    expect(u.setAttribute("health", "any value") == false, "8: health data is refused");
+    expect(u.setAttribute("age", "40") == false, "8: age is refused");
+    expect(u.setAttribute("language", "en"), "8: a stated preference is stored");
+    expect(u.grant("approve changes", "", "") == false, "growth: a capability needs an actor and a reason");
+    expect(u.grant("approve changes", "review board", "Grade 4 evidence"), "growth: an attributed capability is granted");
+    expect(u.claim("risk of illness") == "no claim: not in the record", "6: no claim is made that the record does not hold");
+    u.withdraw();
+    expect(u.actOn("Bodi operator", "repoint again") == false, "5: after withdrawal, acts on the user stop");
+    int seen = u.entriesAbout();
+    print("  entries about the user: " + seen);
+    expect(seen >= 10, "3: the user can see every entry about them");
+    print("  export: " + u.exportAll());
+    expect(u.exportAll() != "", "9: the user can take everything about them");
+    int before = l.count();
+    u.closeAccount("user asked to leave");
+    expect(u.isClosed(), "7: the account is closed");
+    expect(l.count() == before + 1, "7: closing adds to the record and removes nothing");
+    expect(u.exportAll() == "user user-7f3a; consent not given; accepted 1, refused 1; refusals received 1; capability approve changes (Grade 4 evidence); entries about the user " + u.entriesAbout(), "7: after closing only the pseudonym and the record remain");
+    expect(u.grant("anything", "review board", "late") == false, "7: nothing new is granted after closing");
+    if (failures == 0) { print("user: all " + passes + " checks passed"); }
+    else { print("user: " + failures + " check(s) failed of " + (passes + failures)); }
+  }
+}

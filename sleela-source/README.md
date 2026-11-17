@@ -21,7 +21,8 @@ sleela-source/
   professional/            eight lanes at 6000 files/s, stricter contracts
   conduct/                 alphabets, commutation and solubility matrices, demise, hireability,
                            profit, ample and support parts, the Tranchion study guide
-  build.sh                 compiles and runs all five programs
+  user/                    User Class II: the MORAL.md statements enforced for one user
+  build.sh                 compiles and runs all six programs
 ```
 
 ## What each strand file holds
@@ -96,6 +97,7 @@ modules: all 41 checks passed
 medium: all 7 checks passed
 professional: all 11 checks passed
 conduct: all 29 checks passed
+user: all 19 checks passed
 ```
 
 ## Language notes

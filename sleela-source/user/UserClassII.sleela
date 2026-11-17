@@ -1,0 +1,225 @@
+#sleela 3.1
+<< UserClassII: a person who uses an APML system, written so that the nine
+   moral statements of MORAL.md hold for them. Each method is one of those
+   statements made enforceable for a single user:
+
+     1 People decide        decide: only the user accepts or refuses what is
+                            proposed to them, and a refusal needs no reason
+     2 Everyone starts level  no rank, privilege or role flag exists
+     3 Nothing is hidden    entriesAbout: every entry about the user is readable
+     4 Every refusal is explained  refuseUser needs a reason code
+     5 Consent is mutual    consent and withdraw; withdrawal stops future acts
+     6 Claims are honest    claims about the user come from the record only
+     7 Endings keep record  closeAccount keeps the record, drops the display
+                            name and leaves only the pseudonym
+     8 Not scored by who they are  setAttribute refuses personal traits
+     9 The start stays level over time  exportAll lets the user leave with
+                            everything about them
+
+   This class makes no medical or biological claim. It holds no health data
+   and refuses any attempt to store some. >>
+class UserClassII {
+  String pseudonym = "";
+  String displayName = "";
+  boolean consented = false;
+  boolean closed = false;
+  int accepted = 0;
+  int refused = 0;
+  int refusalsReceived = 0;
+  int attributesRefused = 0;
+  int capabilityCount = 0;
+  String[] capability = new String[16];
+  String[] capabilityReason = new String[16];
+  String[] attrName = new String[8];
+  String[] attrValue = new String[8];
+  int attrCount = 0;
+  ConductLedger ledger = null;
+
+  void begin(String pseudo, String shown, ConductLedger l) {
+    pseudonym = pseudo;
+    displayName = shown;
+    ledger = l;
+    ledger.append(pseudonym, "account opened", 4, 0, 0, 3, 0, 0, true);
+  }
+
+  < Statement 5. Consent is given by the user and can be withdrawn at any time. >
+  void consent() {
+    consented = true;
+    ledger.append(pseudonym, "consent given", 9, 0, 1, 2, 0, 0, true);
+  }
+
+  void withdraw() {
+    consented = false;
+    ledger.append(pseudonym, "consent withdrawn", 9, 0, 0, 2, 0, 0, true);
+  }
+
+  < Statement 5. Another party may act on this user only with consent, an actor and a reason. >
+  boolean actOn(String actor, String why) {
+    boolean ok = true;
+    if (closed) { ok = false; }
+    if (consented == false) { ok = false; }
+    if (actor == "") { ok = false; }
+    if (why == "") { ok = false; }
+    ledger.append(actor, why, 5, 0, 0, 1, 0, 0, ok);
+    return ok;
+  }
+
+  < Statement 1. The user decides. A refusal by the user needs no reason. >
+  void decide(boolean accept, String why) {
+    if (accept) {
+      accepted = accepted + 1;
+      ledger.append(pseudonym, why, 10, 0, 1, 5, 0, 0, true);
+    } else {
+      refused = refused + 1;
+      ledger.append(pseudonym, why, 11, 0, 0, 5, 0, 0, true);
+    }
+  }
+
+  < Statement 4. The system may turn the user away only with a reason code from ReasonCatalog. >
+  boolean refuseUser(String actor, int reasonCode) {
+    if (reasonCode < 1) { return false; }
+    if (reasonCode > 10) { return false; }
+    refusalsReceived = refusalsReceived + 1;
+    ledger.append(actor, "refused user", 11, 0, reasonCode, 4, reasonCode, 0, true);
+    return true;
+  }
+
+  < Statement 8. Personal traits are never stored. Only allowlisted preferences are. >
+  boolean setAttribute(String field, String value) {
+    boolean allowed = false;
+    if (field == "language") { allowed = true; }
+    if (field == "time zone") { allowed = true; }
+    if (field == "notification") { allowed = true; }
+    if (allowed == false) {
+      attributesRefused = attributesRefused + 1;
+      ledger.append(pseudonym, "refused to store " + field, 4, 0, 0, 8, 0, 0, false);
+      return false;
+    }
+    if (attrCount >= 8) { return false; }
+    attrName[attrCount] = field;
+    attrValue[attrCount] = value;
+    attrCount = attrCount + 1;
+    return true;
+  }
+
+  < Growth. A capability is granted with an actor and a reason, and is recorded. >
+  boolean grant(String cap, String actor, String why) {
+    if (closed) { return false; }
+    if (actor == "") { return false; }
+    if (why == "") { return false; }
+    if (capabilityCount >= 16) { return false; }
+    capability[capabilityCount] = cap;
+    capabilityReason[capabilityCount] = why;
+    capabilityCount = capabilityCount + 1;
+    ledger.append(actor, "granted " + cap + ": " + why, 6, 0, 1, 1, 0, 0, true);
+    return true;
+  }
+
+  < Statement 3. Count every entry that names this user as actor or as subject. >
+  int entriesAbout() {
+    int n = 0;
+    int i = 0;
+    while (i < ledger.count()) {
+      if (ledger.actorAt(i) == pseudonym) { n = n + 1; }
+      i = i + 1;
+    }
+    return n + actsOnUser();
+  }
+
+  int actsOnUser() {
+    int n = 0;
+    int i = 0;
+    while (i < ledger.count()) {
+      if (ledger.actorAt(i) != pseudonym) {
+        if (ledger.wantAt(i) == 5) { n = n + 1; }
+        if (ledger.reasonAt(i) == "refused user") { n = n + 1; }
+        if (ledger.wantAt(i) == 6) { n = n + 1; }
+      }
+      i = i + 1;
+    }
+    return n;
+  }
+
+  < Statement 6. A claim about the user is a count from the record, never an inference. >
+  String claim(String field) {
+    if (field == "decisions accepted") { return "" + accepted; }
+    if (field == "decisions refused") { return "" + refused; }
+    if (field == "capabilities") { return "" + capabilityCount; }
+    if (field == "consent") {
+      if (consented) { return "given"; }
+      return "not given";
+    }
+    return "no claim: not in the record";
+  }
+
+  < Statement 9. Everything held about the user, in one export. >
+  String exportAll() {
+    String s = "user " + pseudonym;
+    if (displayName != "") { s = s + " (" + displayName + ")"; }
+    s = s + "; consent " + claim("consent");
+    s = s + "; accepted " + accepted + ", refused " + refused;
+    s = s + "; refusals received " + refusalsReceived;
+    int i = 0;
+    while (i < attrCount) {
+      s = s + "; " + attrName[i] + " = " + attrValue[i];
+      i = i + 1;
+    }
+    i = 0;
+    while (i < capabilityCount) {
+      s = s + "; capability " + capability[i] + " (" + capabilityReason[i] + ")";
+      i = i + 1;
+    }
+    s = s + "; entries about the user " + entriesAbout();
+    return s;
+  }
+
+  < Statement 7. Closing keeps the record and the pseudonym, and drops the display name and preferences. >
+  void closeAccount(String why) {
+    closed = true;
+    consented = false;
+    displayName = "";
+    attrCount = 0;
+    ledger.append(pseudonym, why, 12, 0, 0, 8, 0, 0, true);
+  }
+
+  boolean isClosed() { return closed; }
+
+  < ---- Descriptive metadata (version 1.11 nested-friendly accessors) ---- >
+  << Eleven catalogued attributes with getter and setter pairs. Values are
+     faithful to the real origin where publicly known; unknown values say
+     unknown. Science rating 1 means an initial design proposal. >>
+  String metaVersion = "0.1.0";
+  int metaId = 401;
+  String metaAuthor = "Max Rupplin (mearvk), owner text; drafted with Kiro";
+  String metaDate = "2026-11-16";
+  String metaCopyright = "MIT License, Copyright (c) 2026 Max Rupplin";
+  String metaTrademark = "unknown";
+  String metaCorporation = "unknown";
+  String metaOrigin = "unknown";
+  String metaBirthDate = "2026-11-16";
+  int metaScienceRating = 1;
+  String metaNationalSchedule = "none";
+
+  String getVersion() { return metaVersion; }
+  void setVersion(String v) { metaVersion = v; }
+  int getId() { return metaId; }
+  void setId(int v) { metaId = v; }
+  String getAuthor() { return metaAuthor; }
+  void setAuthor(String v) { metaAuthor = v; }
+  String getDate() { return metaDate; }
+  void setDate(String v) { metaDate = v; }
+  String getCopyright() { return metaCopyright; }
+  void setCopyright(String v) { metaCopyright = v; }
+  String getTrademark() { return metaTrademark; }
+  void setTrademark(String v) { metaTrademark = v; }
+  String getCorporation() { return metaCorporation; }
+  void setCorporation(String v) { metaCorporation = v; }
+  String getOrigin() { return metaOrigin; }
+  void setOrigin(String v) { metaOrigin = v; }
+  String getBirthDate() { return metaBirthDate; }
+  void setBirthDate(String v) { metaBirthDate = v; }
+  int getScienceRating() { return metaScienceRating; }
+  void setScienceRating(int v) { metaScienceRating = v; }
+  String getNationalSchedule() { return metaNationalSchedule; }
+  void setNationalSchedule(String v) { metaNationalSchedule = v; }
+}
