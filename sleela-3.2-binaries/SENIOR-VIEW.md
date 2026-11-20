@@ -15,7 +15,7 @@ A short orientation for engineers at Grade 3 or 4, and for AI tools that need th
 | Folder | Handle with care because |
 |--------|--------------------------|
 | `network/` | Many servers open ports. `skya` listens on 0.0.0.0:8443 as soon as it starts. |
-| `toolchain/` | `sleela` and `sleelvac` refuse to run in a stock checkout until the SHA-256 manifest matches (see README, Provenance and caveats). |
+| `toolchain/` | `sleela` and `sleelvac` run the SHA-256 execution gate against the checkout they run in. The 2026-11-20 rebuilds pass it in a stock checkout of SLeeLa `ffc820696`; a checkout whose manifest does not match its sources is refused (see README, Provenance and caveats). |
 | `native-bridges/` | `idea-canvas-bench` needs a display or GPU. `sleela_java28_demo` needs a Java 28 memory host. |
 | all others | Local, no listener known. |
 

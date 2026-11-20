@@ -14,9 +14,9 @@ The three main tools, built from `impl/`.
 
 | Binary | Description |
 |--------|-------------|
-| `sleela` | SLeeLa Language/Runtime 1.3.2-pro. Checks, runs and compiles `.sleela` programs on the native C/C++ Core VM. Subcommands include `check`, `run`, `compile -o`, `validate-artifact`, `nordshrift` and `version`. Source syntax 1.0 to 3.1. |
-| `sleelvac` | Sleelvac 1.3.2-pro. The named SLeeLa compiler, built as an independent binary from the same front end. Compiles to runnable Core artifacts, accepts `.xclass` and JVM-family input, and runs the SHA-256 execution gate. |
-| `nordshrift` | Nordshrift 2.7.1-dev. Transpiler driver for `.sst` sources (spec NS-SST-0001 2.2): `check`, `build`, `objects`, `relevance`, `version`. |
+| `sleela` | SLeeLa Language/Runtime 1.0121 (artifact `SLEELA-BIN-1.0122`, rebuilt 2026-11-20). Checks, runs and compiles `.sleela` programs on the native C/C++ Core VM. Subcommands include `check`, `run`, `compile -o`, `validate-artifact`, `nordshrift` and `version`. Source syntax 1.0 to 3.2. |
+| `sleelvac` | Sleelvac 1.0121 (rebuilt 2026-11-20). The named SLeeLa compiler, built as an independent binary from the same front end. Compiles to runnable Core artifacts, accepts `.xclass` and JVM-family input, and runs the SHA-256 execution gate. Source syntax 1.0 to 3.2. |
+| `nordshrift` | Nordshrift 2.7.1-dev (artifact `NORDSHRIFT-BIN-1.0121`, rebuilt 2026-11-20). Transpiler driver for `.sst` sources (spec NS-SST-0001 2.2), drives SLeeLa source syntax up to 3.2: `check`, `build`, `objects`, `relevance`, `version`. |
 
 ### Compilers, decompiler and converters
 
@@ -28,7 +28,7 @@ Folder: `compiler/`
 | `sleela_compiler_tests` | Unit tests for `sleelac`. |
 | `langc_selftest` | Self-test for the `lib/compiler` language compiler. |
 | `xltc` | XLT model compiler (`impl/xlt`). Takes an XLT model and prints a congruence report listing issues. |
-| `javaconv` | Java converter from `sleelactl/convert`. Usage: `javaconv --jdk-version N` or `javaconv --jdk DIR --out DIR [--jdk-version N]`. Converts a JDK's Java sources to SLeeLa and expects the `sleelactl/jdk/N` layout. |
+| `javaconv` | Java to SLeeLa converter from `sleelactl/convert` (artifact `JAVACONV-BIN-1.0121`, rebuilt 2026-11-20, conversion model `java-to-sleela 1.6.0`). It is the binary behind `sleelactl run java-convert`. Usage: `javaconv --jdk DIR --out DIR [--jdk-version N]`, `javaconv --file F.java --out DIR`, `javaconv --jdk-version N` (expects the `sleelactl/jdk/N` layout), `javaconv --self-check`. It reads `impl/subjects/conversion/conversion.model` and `lib/java` from a SLeeLa checkout: set `SLEELA_ROOT` to one when it runs from this folder. |
 | `sleela-decompiler` | Slecompiler native-binary analysis tool: `sleela-decompiler <inspect|disassemble|cfg|functions> <file> [length] [--thumb|--arm]`. |
 | `sleela-decompiler-test` | Tests for the decompiler. |
 | `slecompiler-api-cfg` | Slecompiler API tool that works on a compiled artifact (control-flow view, going by its name). Takes an artifact path. |
@@ -259,6 +259,7 @@ Folder: `terminal-gui/`
 
 ## Provenance and caveats
 - Built from SLeeLa `master` at commit `8ccb9cf1` in the Kiro sandbox, g++ -std=c++17 -O2.
-- SLeeLa's `security/sha256-manifest.json` did not match 19 of its own source files at that commit. The core toolchain was built and checked against a manifest generated from the same checkout, kept outside the repo. In a stock checkout, `sleela` and `sleelvac` will refuse to run until `make regen-manifest` is run in `impl` or `SLEELA_SHA256_MANIFEST` points to a matching manifest.
+- Refreshed 2026-11-20 from SLeeLa `master` `ffc820696` (Linux x86-64, GCC 11.5): `toolchain/sleela`, `toolchain/sleelvac`, `toolchain/nordshrift` and `compiler/javaconv`. `sleela` and `nordshrift` are byte-identical to SLeeLa `working-binaries/`, and so is `javaconv`. The committed SLeeLa manifest matches that commit, so these four were built against it, and `sleela`/`sleelvac` pass the execution gate in a stock checkout of `ffc820696` (checked: `verification: PASS (18673 item(s))`). Checked: `version` of the three toolchain tools, `javaconv --self-check`, and SLeeLa `tests/javaconv_differential_test.sh` 116/116 with this `javaconv`. Every other binary in this folder is still the `8ccb9cf1` build.
+- For the `8ccb9cf1` build: SLeeLa's `security/sha256-manifest.json` did not match 19 of its own source files at that commit. The core toolchain was built and checked against a manifest generated from the same checkout, kept outside the repo. In a stock checkout, `sleela` and `sleelvac` will refuse to run until `make regen-manifest` is run in `impl` or `SLEELA_SHA256_MANIFEST` points to a matching manifest.
 - Linux x86-64 only. Rebuild from source for other platforms.
 - Not built (missing system headers or defects in the SLeeLa sources): `http-1.0`, `http-servers/2`, `ballum`, the GTK4 terminal, `lib/connector/*`, `connector`, `sommeliers`, `server-edition/http`, the alternate `sleela-virtual-machine/008/build/linux` build (`slvm-08` itself is included). The full test suites were not run.

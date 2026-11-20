@@ -17,8 +17,8 @@ Use as an internal memorandum or inventory record. It states facts about files. 
 | ID | Assertion | Evidence |
 |----|-----------|----------|
 | B1 | The binaries are Linux x86-64 ELF executables, dynamically linked against glibc. | README, first paragraph |
-| B2 | They were built from SLeeLa `master` at commit `8ccb9cf1` with g++ -std=c++17 -O2, in the Kiro sandbox. | README, Provenance and caveats |
-| B3 | Source `security/sha256-manifest.json` did not match 19 source files at that commit. The core toolchain was built against a manifest generated from the same checkout. | README, Provenance and caveats |
+| B2 | They were built from SLeeLa `master` at commit `8ccb9cf1` with g++ -std=c++17 -O2, in the Kiro sandbox, except `toolchain/sleela`, `toolchain/sleelvac`, `toolchain/nordshrift` and `compiler/javaconv`, rebuilt from `ffc820696` on 2026-11-20. | README, Provenance and caveats |
+| B3 | Source `security/sha256-manifest.json` did not match 19 source files at `8ccb9cf1`. That build of the core toolchain used a manifest generated from the same checkout. At `ffc820696` the committed manifest matches, and the 2026-11-20 rebuilds used it. | README, Provenance and caveats |
 
 ## Series C: Structure (how the files are organized)
 
